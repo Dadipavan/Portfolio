@@ -96,9 +96,20 @@ export class ResumeManager {
       let blob: Blob
       let fileName = resume.fileName
       
-      if (resume.storageType === 'cloud' && resume.cloudFileName) {
-        // Download from cloud
-        blob = await CloudStorageService.downloadFile(resume.cloudFileName)
+      if (resume.storageType === 'cloud') {
+        if (resume.cloudFileName) {
+          // Download from Supabase storage using cloudFileName
+          blob = await CloudStorageService.downloadFile(resume.cloudFileName)
+        } else if (resume.cloudUrl) {
+          // Fallback: Download from public URL (for imported cloud files)
+          const response = await fetch(resume.cloudUrl)
+          if (!response.ok) {
+            throw new Error(`Failed to download from URL: ${response.statusText}`)
+          }
+          blob = await response.blob()
+        } else {
+          throw new Error('No cloud file reference available for download')
+        }
       } else if (resume.fileData) {
         // Download from local base64 data
         blob = this.base64ToBlob(resume.fileData, resume.fileType)
@@ -115,6 +126,8 @@ export class ResumeManager {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      
+      console.log(`Successfully downloaded: ${fileName}`)
       
     } catch (error) {
       console.error('Download error:', error)
@@ -214,6 +227,30 @@ export class ResumeManager {
     }
     
     return { success, failed }
+  }
+
+  // Create a resume record from existing cloud file metadata
+  static async uploadResumeFromCloud(cloudMeta: { name: string; publicUrl?: string; size?: number; mimeType?: string }): Promise<Resume> {
+    try {
+      const resume: Resume = {
+        id: this.generateId(),
+        name: cloudMeta.name,
+        description: 'Imported from cloud storage',
+        fileName: cloudMeta.name,
+        fileSize: this.formatFileSize(cloudMeta.size || 0),
+        fileType: cloudMeta.mimeType || 'application/octet-stream',
+        uploadDate: new Date().toISOString(),
+        cloudFileName: cloudMeta.name,
+        cloudUrl: cloudMeta.publicUrl,
+        storageType: 'cloud'
+      }
+
+      await this.saveResumeRecord(resume)
+      return resume
+    } catch (error) {
+      console.error('Import cloud file error:', error)
+      throw error
+    }
   }
   
   // Utility methods

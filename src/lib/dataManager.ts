@@ -9,15 +9,19 @@ import {
   ACHIEVEMENTS 
 } from './data';
 
-interface Resume {
+export interface Resume {
   id: string;
   name: string;
   description: string;
   fileName: string;
   fileSize: string;
   uploadDate: string;
-  fileData?: string;
+  fileData?: string; // Base64 data (fallback for local storage)
   fileType: string;
+  // Cloud storage fields
+  cloudFileName?: string; // Unique filename in cloud storage
+  cloudUrl?: string; // Public URL for cloud file
+  storageType: 'local' | 'cloud'; // Storage location indicator
 }
 
 export interface PortfolioData {

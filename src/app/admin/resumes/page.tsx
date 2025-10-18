@@ -2,24 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive } from 'lucide-react';
+import { Resume } from '@/lib/dataManager';
+import { ResumeManager } from '@/lib/resumeManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
-
-interface Resume {
-  id: string;
-  name: string;
-  description: string;
-  fileName: string;
-  fileSize: string;
-  uploadDate: string;
-  fileData?: string; // Base64 encoded file data
-  fileType: string;
-}
 
 export default function ResumesAdmin() {
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -35,17 +25,21 @@ export default function ResumesAdmin() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [preferCloud, setPreferCloud] = useState(true);
 
   useEffect(() => {
-    const data = getPortfolioData();
-    if (data?.resumes) {
-      setResumes(data.resumes);
-    }
-    setLoading(false);
+    loadResumes();
   }, []);
 
-  const generateId = () => {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  const loadResumes = async () => {
+    try {
+      const resumeList = await ResumeManager.getAllResumes();
+      setResumes(resumeList);
+    } catch (error) {
+      console.error('Error loading resumes:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -59,16 +53,21 @@ export default function ResumesAdmin() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file type (only allow PDF, DOC, DOCX)
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      // Check file type (only allow PDF, DOC, DOCX, TXT)
+      const allowedTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain'
+      ];
       if (!allowedTypes.includes(file.type)) {
-        alert('Please upload only PDF, DOC, or DOCX files.');
+        alert('Please upload only PDF, DOC, DOCX, or TXT files.');
         return;
       }
 
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB.');
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB.');
         return;
       }
 
@@ -80,15 +79,6 @@ export default function ResumesAdmin() {
         fileType: file.type
       }));
     }
-  };
-
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
   };
 
   const handleSave = async () => {
@@ -105,31 +95,29 @@ export default function ResumesAdmin() {
     setUploading(true);
 
     try {
-      let fileData = '';
-      if (selectedFile) {
-        fileData = await convertFileToBase64(selectedFile);
-      }
-
-      const newResume: Resume = {
-        id: editingIndex !== null ? resumes[editingIndex].id : generateId(),
-        name: formData.name!,
-        description: formData.description!,
-        fileName: formData.fileName!,
-        fileSize: formData.fileSize!,
-        fileType: formData.fileType!,
-        uploadDate: editingIndex !== null ? resumes[editingIndex].uploadDate : new Date().toISOString(),
-        fileData: selectedFile ? fileData : (editingIndex !== null ? resumes[editingIndex].fileData : '')
-      };
-
-      const updatedResumes = [...resumes];
       if (editingIndex !== null) {
-        updatedResumes[editingIndex] = newResume;
-      } else {
-        updatedResumes.push(newResume);
+        // Update existing resume metadata
+        const success = await ResumeManager.updateResume(resumes[editingIndex].id, {
+          name: formData.name,
+          description: formData.description
+        });
+        
+        if (success) {
+          await loadResumes(); // Reload to get updated data
+        } else {
+          throw new Error('Failed to update resume');
+        }
+      } else if (selectedFile) {
+        // Upload new resume
+        await ResumeManager.uploadResume(
+          selectedFile,
+          formData.name!,
+          formData.description!,
+          preferCloud
+        );
+        
+        await loadResumes(); // Reload to get new data
       }
-
-      setResumes(updatedResumes);
-      updatePortfolioSection('resumes', updatedResumes);
 
       // Reset form
       setShowAddForm(false);
@@ -143,7 +131,8 @@ export default function ResumesAdmin() {
       });
       setSelectedFile(null);
     } catch (error) {
-      alert('Error uploading file. Please try again.');
+      console.error('Error saving resume:', error);
+      alert(`Error ${editingIndex !== null ? 'updating' : 'uploading'} resume. Please try again.`);
     } finally {
       setUploading(false);
     }
@@ -162,43 +151,43 @@ export default function ResumesAdmin() {
     setSelectedFile(null);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (resume: Resume, index: number) => {
     if (confirm('Are you sure you want to delete this resume? This action cannot be undone.')) {
-      const updatedResumes = resumes.filter((_, i) => i !== index);
-      setResumes(updatedResumes);
-      updatePortfolioSection('resumes', updatedResumes);
+      try {
+        const success = await ResumeManager.deleteResume(resume);
+        if (success) {
+          await loadResumes(); // Reload to get updated data
+        } else {
+          throw new Error('Failed to delete resume');
+        }
+      } catch (error) {
+        console.error('Error deleting resume:', error);
+        alert('Error deleting resume. Please try again.');
+      }
     }
   };
 
-  const handleDownload = (resume: Resume) => {
-    if (!resume.fileData) {
-      alert('File data not available for download.');
-      return;
-    }
-
+  const handleDownload = async (resume: Resume) => {
     try {
-      // Convert base64 to blob
-      const base64Data = resume.fileData.split(',')[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: resume.fileType });
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = resume.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      await ResumeManager.downloadResume(resume);
     } catch (error) {
+      console.error('Error downloading resume:', error);
       alert('Error downloading file. Please try again.');
     }
+  };
+
+  const getStorageIcon = (storageType?: string) => {
+    if (storageType === 'cloud') {
+      return <Cloud size={14} className="text-blue-500" />;
+    }
+    return <HardDrive size={14} className="text-gray-500" />;
+  };
+
+  const getStorageText = (storageType?: string) => {
+    if (storageType === 'cloud') {
+      return 'Cloud Storage';
+    }
+    return 'Local Storage';
   };
 
   if (loading) {
@@ -269,6 +258,38 @@ export default function ResumesAdmin() {
               </div>
 
               <div className="space-y-6">
+                {/* Storage Preference */}
+                {editingIndex === null && (
+                  <div>
+                    <label className={labelStyles}>Storage Preference</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={preferCloud}
+                          onChange={() => setPreferCloud(true)}
+                          className="text-purple-600 focus:ring-purple-500"
+                        />
+                        <Cloud size={16} className="text-blue-500" />
+                        <span className="text-sm text-gray-700">Cloud Storage (Recommended)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={!preferCloud}
+                          onChange={() => setPreferCloud(false)}
+                          className="text-purple-600 focus:ring-purple-500"
+                        />
+                        <HardDrive size={16} className="text-gray-500" />
+                        <span className="text-sm text-gray-700">Local Storage</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Cloud storage allows you to access files from anywhere. Local storage saves files in browser only.
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className={labelStyles}>Resume Name *</label>
                   <input
@@ -306,13 +327,13 @@ export default function ResumesAdmin() {
                           <input
                             type="file"
                             className="sr-only"
-                            accept=".pdf,.doc,.docx"
+                            accept=".pdf,.doc,.docx,.txt"
                             onChange={handleFileSelect}
                           />
                         </label>
                         <p className="pl-1">or drag and drop</p>
                       </div>
-                      <p className="text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
+                      <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT up to 10MB</p>
                       {selectedFile && (
                         <p className="text-sm text-green-600 font-medium">
                           Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
@@ -339,7 +360,7 @@ export default function ResumesAdmin() {
                   className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={16} />
-                  {uploading ? 'Uploading...' : (editingIndex !== null ? 'Update Resume' : 'Upload Resume')}
+                  {uploading ? 'Processing...' : (editingIndex !== null ? 'Update Resume' : 'Upload Resume')}
                 </button>
               </div>
             </motion.div>
@@ -375,7 +396,13 @@ export default function ResumesAdmin() {
                         <FileText className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{resume.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">{resume.name}</h3>
+                          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                            {getStorageIcon(resume.storageType)}
+                            <span className="text-xs text-gray-600">{getStorageText(resume.storageType)}</span>
+                          </div>
+                        </div>
                         <p className="text-gray-600 text-sm mb-2">{resume.description}</p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>📄 {resume.fileName}</span>
@@ -401,7 +428,7 @@ export default function ResumesAdmin() {
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(index)}
+                        onClick={() => handleDelete(resume, index)}
                         className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete Resume"
                       >

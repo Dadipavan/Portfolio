@@ -18,14 +18,21 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
-    // Small delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      // Small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (login(password)) {
-      router.push('/admin');
-    } else {
-      setError('Invalid password');
+      const success = await login(password);
+      if (success) {
+        router.push('/admin');
+      } else {
+        setError('Invalid password');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Login failed. Please try again.');
     }
+    
     setLoading(false);
   };
 

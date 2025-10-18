@@ -196,23 +196,27 @@ export const CERTIFICATIONS = [
     issuer: 'GeeksforGeeks',
     year: '2025',
     skills: ['OOP', 'Collections', 'Multithreading', 'Exception Handling'],
+    verificationUrl: '', // Add verification URL when available
   },
   {
     title: 'Certified Data Science for Everyone',
     issuer: 'Reliance Foundation Skill Academy',
     year: '2025',
     skills: ['Data Collection', 'Data Cleaning', 'Visualization', 'ML Concepts'],
+    verificationUrl: '', // Add verification URL when available
   },
   {
     title: 'Analyzing Data with Python',
     issuer: 'edX',
     year: '2024',
     skills: ['Pandas', 'NumPy', 'Matplotlib', 'Data Analysis'],
+    verificationUrl: '', // Add verification URL when available
   },
   {
     title: 'Analyzing and Visualizing Data with Power BI',
     issuer: 'edX',
     year: '2024',
     skills: ['Interactive Dashboards', 'DAX Calculations', 'Data Modeling'],
+    verificationUrl: '', // Add verification URL when available
   },
 ];

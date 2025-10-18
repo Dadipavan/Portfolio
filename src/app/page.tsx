@@ -573,7 +573,7 @@ export default function Home() {
                   {cert.title}
                 </h3>
                 <p className="text-purple-400 text-sm mb-4">{cert.issuer}</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {cert.skills.map((skill: string) => (
                     <span
                       key={skill}
@@ -583,6 +583,21 @@ export default function Home() {
                     </span>
                   ))}
                 </div>
+                {cert.verificationUrl && (
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <a
+                      href={cert.verificationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Verify Certificate
+                    </a>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

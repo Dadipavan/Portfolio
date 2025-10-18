@@ -14,6 +14,7 @@ interface Certification {
   issuer: string;
   year: string;
   skills: string[];
+  verificationUrl: string;
 }
 
 export default function CertificationsAdmin() {
@@ -28,6 +29,7 @@ export default function CertificationsAdmin() {
     issuer: '',
     year: '',
     skills: [],
+    verificationUrl: '',
   });
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export default function CertificationsAdmin() {
       issuer: cert.issuer,
       year: cert.year,
       skills: [...cert.skills],
+      verificationUrl: cert.verificationUrl || '',
     });
     setEditingIndex(index);
     setShowAddForm(false);
@@ -91,6 +94,7 @@ export default function CertificationsAdmin() {
       issuer: '',
       year: '',
       skills: [],
+      verificationUrl: '',
     });
     setEditingIndex(null);
     setShowAddForm(false);
@@ -207,6 +211,20 @@ export default function CertificationsAdmin() {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className={labelStyles}>Verification URL</label>
+                <input
+                  type="url"
+                  value={formData.verificationUrl}
+                  onChange={(e) => setFormData({ ...formData, verificationUrl: e.target.value })}
+                  className={inputStyles}
+                  placeholder="e.g., https://certificates.example.com/verify/abc123"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Optional: Add a URL where visitors can verify this certificate
+                </p>
               </div>
 
               <div>

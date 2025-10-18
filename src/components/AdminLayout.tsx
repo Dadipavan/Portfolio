@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   BarChart3,
-  Home
+  Home,
+  FileText
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -33,6 +34,7 @@ const menuItems = [
   { title: 'Education', href: '/admin/education', icon: GraduationCap },
   { title: 'Certifications', href: '/admin/certifications', icon: Award },
   { title: 'Achievements', href: '/admin/achievements', icon: Trophy },
+  { title: 'Resumes', href: '/admin/resumes', icon: FileText },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

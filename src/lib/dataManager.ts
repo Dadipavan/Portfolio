@@ -9,6 +9,17 @@ import {
   ACHIEVEMENTS 
 } from './data';
 
+interface Resume {
+  id: string;
+  name: string;
+  description: string;
+  fileName: string;
+  fileSize: string;
+  uploadDate: string;
+  fileData?: string;
+  fileType: string;
+}
+
 export interface PortfolioData {
   personalInfo: typeof PERSONAL_INFO;
   technicalSkills: typeof TECHNICAL_SKILLS;
@@ -17,6 +28,7 @@ export interface PortfolioData {
   education: typeof EDUCATION;
   certifications: typeof CERTIFICATIONS;
   achievements: typeof ACHIEVEMENTS;
+  resumes: Resume[];
   lastUpdated: string;
 }
 
@@ -36,6 +48,7 @@ export function initializeData(): void {
       education: EDUCATION,
       certifications: CERTIFICATIONS,
       achievements: ACHIEVEMENTS,
+      resumes: [],
       lastUpdated: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));

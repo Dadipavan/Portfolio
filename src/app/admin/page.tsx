@@ -12,16 +12,26 @@ import {
   Download,
   Settings
 } from 'lucide-react';
-import { initializeData, getPortfolioData, exportData } from '@/lib/dataManager';
+import { initializeData, getPortfolioData, getPortfolioDataSync, exportData } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    initializeData();
-    const portfolioData = getPortfolioData();
-    setData(portfolioData);
+    const loadData = async () => {
+      initializeData();
+      try {
+        const portfolioData = await getPortfolioData();
+        setData(portfolioData);
+      } catch (error) {
+        console.error('Failed to load portfolio data, using sync fallback:', error);
+        const portfolioData = getPortfolioDataSync();
+        setData(portfolioData);
+      }
+    };
+    
+    loadData();
   }, []);
 
   const stats = data ? [

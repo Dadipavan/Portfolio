@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Save, Award, Plus, Edit, Trash2 } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -33,7 +33,7 @@ export default function CertificationsAdmin() {
   });
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data?.certifications) {
       setCertifications(data.certifications);
     }
@@ -42,11 +42,20 @@ export default function CertificationsAdmin() {
 
   const handleSave = async () => {
     setSaving(true);
-    updatePortfolioSection('certifications', certifications);
-    setTimeout(() => {
+    
+    try {
+      await updatePortfolioSection('certifications', certifications);
+      console.log('✅ Certifications updated successfully');
+      
+      setTimeout(() => {
+        setSaving(false);
+        alert('Certifications updated successfully!');
+      }, 500);
+    } catch (error) {
+      console.error('❌ Failed to update certifications:', error);
       setSaving(false);
-      alert('Certifications updated successfully!');
-    }, 500);
+      alert('Failed to save changes. Please try again.');
+    }
   };
 
   const addCertification = () => {

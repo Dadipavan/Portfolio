@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Save, GraduationCap, Plus, Edit, Trash2 } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -36,7 +36,7 @@ export default function EducationAdmin() {
   });
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data?.education) {
       setEducation(data.education);
     }
@@ -45,11 +45,20 @@ export default function EducationAdmin() {
 
   const handleSave = async () => {
     setSaving(true);
-    updatePortfolioSection('education', education);
-    setTimeout(() => {
+    
+    try {
+      await updatePortfolioSection('education', education);
+      console.log('✅ Education updated successfully');
+      
+      setTimeout(() => {
+        setSaving(false);
+        alert('Education updated successfully!');
+      }, 500);
+    } catch (error) {
+      console.error('❌ Failed to update education:', error);
       setSaving(false);
-      alert('Education updated successfully!');
-    }, 500);
+      alert('Failed to save changes. Please try again.');
+    }
   };
 
   const addEducation = () => {

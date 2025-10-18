@@ -467,11 +467,11 @@ export default function ResumesAdmin() {
               onClick={() => setShowCloudModal(false)}
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
-                onClick={(e) => e.stopPropagation()}
-              >
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Cloud className="w-6 h-6 text-blue-500" />
@@ -485,7 +485,7 @@ export default function ResumesAdmin() {
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-auto py-1">
                   {cloudFiles.length === 0 ? (
                     <div className="text-center py-12">
                       <Cloud className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -500,22 +500,22 @@ export default function ResumesAdmin() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3"
                         >
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                               <FileText className="w-5 h-5 text-blue-600" />
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{file.name}</h4>
-                              <div className="flex items-center gap-4 text-sm text-gray-500">
-                                <span>📊 {formatFileSize(file.size)}</span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 truncate">{file.name}</h4>
+                              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-1">
+                                <span className="truncate">📊 {formatFileSize(file.size)}</span>
                                 <span>📅 {new Date(file.createdAt).toLocaleDateString()}</span>
-                                <span>🔗 {file.mimeType}</span>
+                                <span className="truncate">🔗 {file.mimeType}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 justify-end">
                             <a
                               href={file.publicUrl}
                               target="_blank"

@@ -3,17 +3,54 @@
 import { motion } from 'framer-motion';
 import { Github, Linkedin, Mail, Phone, Download, ExternalLink, Menu } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getPortfolioData, initializeData } from '@/lib/dataManager';
+import { getPortfolioData, getPortfolioDataSync, getDefaultData, initializeData } from '@/lib/dataManager';
 import MobileMenu from '@/components/MobileMenu';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [portfolioData, setPortfolioData] = useState<any>(null);
 
-  useEffect(() => {
+  const loadPortfolioData = async () => {
     initializeData();
-    const data = getPortfolioData();
+    
+    // Load data from database with fallback
+    let data;
+    try {
+      console.log('🔄 Loading portfolio data...');
+      data = await getPortfolioData();
+    } catch (error) {
+      console.warn('❌ Failed to load from database, using sync fallback:', error);
+      data = getPortfolioDataSync();
+    }
+    
+    // Ensure we always have valid data
+    if (!data) {
+      console.warn('⚠️ No data available, using default data');
+      data = getDefaultData();
+    }
+    
+    console.log('Homepage loaded portfolio data:', data?.personalInfo);
     setPortfolioData(data);
+  };
+
+  useEffect(() => {
+    loadPortfolioData();
+    
+    // Listen for storage changes to refresh data when updated from admin
+    const handleDataUpdate = () => {
+      console.log('🔄 Refreshing homepage data due to admin update...');
+      loadPortfolioData();
+    };
+    
+    window.addEventListener('storage', handleDataUpdate);
+    
+    // Listen for custom event for same-tab updates (more reliable)
+    window.addEventListener('portfolioDataUpdated', handleDataUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleDataUpdate);
+      window.removeEventListener('portfolioDataUpdated', handleDataUpdate);
+    };
   }, []);
 
   if (!portfolioData) {

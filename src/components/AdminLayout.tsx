@@ -92,7 +92,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+  <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 max-w-[80vw] sm:max-w-[16rem] bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+  <nav className="flex-1 px-3 sm:px-4 py-4 sm:py-6 space-y-2">
           {menuItems.map((item) => (
             <a
               key={item.href}
@@ -125,7 +125,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+  <div className="p-3 sm:p-4 border-t border-gray-200">
           <div className="space-y-2">
             <a
               href="/"

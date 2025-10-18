@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Settings, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -27,7 +27,7 @@ export default function SkillsAdmin() {
   const [newSkill, setNewSkill] = useState('');
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data?.technicalSkills) {
       let skillsData: SkillCategory[] = [];
       
@@ -71,9 +71,11 @@ export default function SkillsAdmin() {
     setLoading(false);
   }, []);
 
-  const handleSave = () => {
-    const updatedCategories = [...skillCategories];
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.category.trim()) return;
+
+    let updatedCategories = [...skillCategories];
     if (editingCategory !== null) {
       updatedCategories[editingCategory] = formData;
     } else {
@@ -81,7 +83,15 @@ export default function SkillsAdmin() {
     }
 
     setSkillCategories(updatedCategories);
-    updatePortfolioSection('technicalSkills', updatedCategories);
+    
+    try {
+      await updatePortfolioSection('technicalSkills', updatedCategories);
+      console.log('✅ Skills updated successfully');
+    } catch (error) {
+      console.error('❌ Failed to update skills:', error);
+      alert('Failed to save changes. Please try again.');
+      return;
+    }
     
     setEditingCategory(null);
     setShowAddForm(false);
@@ -95,11 +105,18 @@ export default function SkillsAdmin() {
     setShowAddForm(true);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (confirm('Are you sure you want to delete this skill category?')) {
       const updatedCategories = skillCategories.filter((_, i) => i !== index);
       setSkillCategories(updatedCategories);
-      updatePortfolioSection('technicalSkills', updatedCategories);
+      
+      try {
+        await updatePortfolioSection('technicalSkills', updatedCategories);
+        console.log('✅ Skill category deleted successfully');
+      } catch (error) {
+        console.error('❌ Failed to delete skill category:', error);
+        alert('Failed to delete category. Please try again.');
+      }
     }
   };
 
@@ -259,7 +276,7 @@ export default function SkillsAdmin() {
                 Cancel
               </button>
               <button
-                onClick={handleSave}
+                onClick={handleSubmit}
                 disabled={!formData.category || formData.skills.length === 0}
                 className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >

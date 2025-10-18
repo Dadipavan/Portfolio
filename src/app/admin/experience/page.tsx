@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Briefcase, Save, X } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -34,14 +34,14 @@ export default function ExperienceAdmin() {
   });
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data?.experience) {
       setExperiences(data.experience);
     }
     setLoading(false);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedData = [...experiences];
     
     if (editingId) {
@@ -63,7 +63,15 @@ export default function ExperienceAdmin() {
     }
 
     setExperiences(updatedData);
-    updatePortfolioSection('experience', updatedData);
+    
+    try {
+      await updatePortfolioSection('experience', updatedData);
+      console.log('✅ Experience updated successfully');
+    } catch (error) {
+      console.error('❌ Failed to update experience:', error);
+      alert('Failed to save changes. Please try again.');
+      return;
+    }
     
     // Reset form
     setEditingId(null);
@@ -87,11 +95,18 @@ export default function ExperienceAdmin() {
     setShowAddForm(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this experience?')) {
       const updatedExperiences = experiences.filter(exp => exp.id !== id);
       setExperiences(updatedExperiences);
-      updatePortfolioSection('experience', updatedExperiences);
+      
+      try {
+        await updatePortfolioSection('experience', updatedExperiences);
+        console.log('✅ Experience deleted successfully');
+      } catch (error) {
+        console.error('❌ Failed to delete experience:', error);
+        alert('Failed to delete experience. Please try again.');
+      }
     }
   };
 

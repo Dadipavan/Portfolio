@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Save, User, Plus, X, Edit, Trash2, MapPin, Award } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioData, getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -50,34 +50,66 @@ export default function PersonalInfoAdmin() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    const data = getPortfolioData();
-    if (data) {
-      setPersonalInfo(data.personalInfo);
-      setQuickFacts(data.quickFacts || {
-        location: '',
-        cgpa: '',
-        graduation: '',
-        scholarship: ''
-      });
-      setCurrentFocus(data.currentFocus || []);
-    }
-    setLoading(false);
+    const loadData = async () => {
+      try {
+        console.log('🔄 Loading portfolio data...');
+        const data = await getPortfolioData();
+        
+        if (data) {
+          setPersonalInfo(data.personalInfo);
+          setQuickFacts(data.quickFacts || {
+            location: '',
+            cgpa: '',
+            graduation: '',
+            scholarship: ''
+          });
+          setCurrentFocus(data.currentFocus || []);
+        }
+        console.log('✅ Portfolio data loaded successfully');
+      } catch (error) {
+        console.error('❌ Error loading portfolio data:', error);
+        // Fallback to sync version
+        const data = getPortfolioDataSync();
+        if (data) {
+          setPersonalInfo(data.personalInfo);
+          setQuickFacts(data.quickFacts || {
+            location: '',
+            cgpa: '',
+            graduation: '',
+            scholarship: ''
+          });
+          setCurrentFocus(data.currentFocus || []);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     
-    // Update all sections
-    updatePortfolioSection('personalInfo', personalInfo);
-    updatePortfolioSection('quickFacts', quickFacts);
-    updatePortfolioSection('currentFocus', currentFocus);
-    
-    // Show success feedback
-    setTimeout(() => {
+    try {
+      // Update all sections
+      await updatePortfolioSection('personalInfo', personalInfo);
+      await updatePortfolioSection('quickFacts', quickFacts);
+      await updatePortfolioSection('currentFocus', currentFocus);
+      
+      console.log('✅ Personal information saved successfully');
+      
+      // Show success feedback
+      setTimeout(() => {
+        setSaving(false);
+        alert('Personal information updated successfully! Changes will appear on the homepage.');
+      }, 500);
+    } catch (error) {
+      console.error('Error saving data:', error);
       setSaving(false);
-      alert('Personal information updated successfully!');
-    }, 500);
+      alert('Error saving personal information. Please try again.');
+    }
   };
 
   const updateField = (field: string, value: string) => {
@@ -107,6 +139,32 @@ export default function PersonalInfoAdmin() {
     }
   };
 
+  const syncFromCloud = async () => {
+    try {
+      setLoading(true);
+      const cloudData = await getPortfolioData();
+      
+      if (cloudData) {
+        setPersonalInfo(cloudData.personalInfo);
+        setQuickFacts(cloudData.quickFacts || {
+          location: '',
+          cgpa: '',
+          graduation: '',
+          scholarship: ''
+        });
+        setCurrentFocus(cloudData.currentFocus || []);
+        alert('✅ Successfully synced data from database!');
+      } else {
+        alert('❌ No data found to sync');
+      }
+    } catch (error) {
+      console.error('Cloud sync error:', error);
+      alert('❌ Failed to sync from cloud: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const moveItem = (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= currentFocus.length) return;
@@ -131,14 +189,29 @@ export default function PersonalInfoAdmin() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-purple-600" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <User className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Personal Information</h1>
+                <p className="text-gray-600">Update your basic information and contact details</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Personal Information</h1>
-              <p className="text-gray-600">Update your basic information and contact details</p>
-            </div>
+            {process.env.NODE_ENV === 'production' && (
+              <button
+                onClick={syncFromCloud}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                title="Sync data from cloud storage"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sync from Cloud
+              </button>
+            )}
           </div>
         </div>
 

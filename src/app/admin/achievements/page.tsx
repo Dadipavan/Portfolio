@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Trophy, Save, X } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -26,14 +26,14 @@ export default function AchievementsAdmin() {
   });
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data?.achievements) {
       setAchievements(data.achievements);
     }
     setLoading(false);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedData = [...achievements];
     
     if (editingIndex !== null) {
@@ -43,7 +43,15 @@ export default function AchievementsAdmin() {
     }
 
     setAchievements(updatedData);
-    updatePortfolioSection('achievements', updatedData);
+    
+    try {
+      await updatePortfolioSection('achievements', updatedData);
+      console.log('✅ Achievements updated successfully');
+    } catch (error) {
+      console.error('❌ Failed to update achievements:', error);
+      alert('Failed to save changes. Please try again.');
+      return;
+    }
     
     // Reset form
     setEditingIndex(null);
@@ -60,11 +68,18 @@ export default function AchievementsAdmin() {
     setShowAddForm(true);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (confirm('Are you sure you want to delete this achievement?')) {
       const updatedAchievements = achievements.filter((_, i) => i !== index);
       setAchievements(updatedAchievements);
-      updatePortfolioSection('achievements', updatedAchievements);
+      
+      try {
+        await updatePortfolioSection('achievements', updatedAchievements);
+        console.log('✅ Achievement deleted successfully');
+      } catch (error) {
+        console.error('❌ Failed to delete achievement:', error);
+        alert('Failed to delete achievement. Please try again.');
+      }
     }
   };
 

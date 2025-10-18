@@ -15,7 +15,7 @@ import {
   Calendar,
   Star
 } from 'lucide-react';
-import { getPortfolioData, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
 interface Project {
@@ -55,7 +55,7 @@ function ProjectsContent() {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const data = getPortfolioData();
+    const data = getPortfolioDataSync();
     if (data) {
       // Map existing projects to the new interface
       const mappedProjects = data.projects.map(p => ({
@@ -77,10 +77,17 @@ function ProjectsContent() {
     setLoading(false);
   }, []);
 
-  const handleSave = () => {
-    updatePortfolioSection('projects', projects);
-    setShowForm(false);
-    setEditingProject(null);
+  const handleSave = async () => {
+    try {
+      await updatePortfolioSection('projects', projects);
+      console.log('✅ Projects updated successfully');
+      
+      setShowForm(false);
+      setEditingProject(null);
+    } catch (error) {
+      console.error('❌ Failed to update projects:', error);
+      alert('Failed to save changes. Please try again.');
+    }
   };
 
   const handleAddProject = () => {
@@ -103,14 +110,22 @@ function ProjectsContent() {
     setShowForm(true);
   };
 
-  const handleDeleteProject = (id: number) => {
+  const handleDeleteProject = async (id: number) => {
     if (confirm('Are you sure you want to delete this project?')) {
-      setProjects(projects.filter(p => p.id !== id));
-      updatePortfolioSection('projects', projects.filter(p => p.id !== id));
+      const updatedProjects = projects.filter(p => p.id !== id);
+      setProjects(updatedProjects);
+      
+      try {
+        await updatePortfolioSection('projects', updatedProjects);
+        console.log('✅ Project deleted successfully');
+      } catch (error) {
+        console.error('❌ Failed to delete project:', error);
+        alert('Failed to delete project. Please try again.');
+      }
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject) return;
 
@@ -119,9 +134,17 @@ function ProjectsContent() {
       : [...projects, editingProject];
 
     setProjects(updatedProjects);
-    updatePortfolioSection('projects', updatedProjects);
-    setShowForm(false);
-    setEditingProject(null);
+    
+    try {
+      await updatePortfolioSection('projects', updatedProjects);
+      console.log('✅ Project updated successfully');
+      
+      setShowForm(false);
+      setEditingProject(null);
+    } catch (error) {
+      console.error('❌ Failed to update project:', error);
+      alert('Failed to save changes. Please try again.');
+    }
   };
 
   const updateField = (field: keyof Project, value: any) => {

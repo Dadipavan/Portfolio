@@ -18,7 +18,8 @@ import {
   X,
   BarChart3,
   Home,
-  FileText
+  FileText,
+  MapPin
 } from 'lucide-react';
 
 interface AdminLayoutProps {

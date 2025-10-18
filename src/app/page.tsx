@@ -27,7 +27,7 @@ export default function Home() {
     );
   }
 
-  const { personalInfo, technicalSkills, projects, experience, education, certifications, achievements } = portfolioData;
+  const { personalInfo, technicalSkills, projects, experience, education, certifications, achievements, quickFacts, currentFocus } = portfolioData;
   
   // Ensure technicalSkills is always an array (handle both old and new data formats)
   const skillsArray = Array.isArray(technicalSkills) ? technicalSkills : [
@@ -176,22 +176,34 @@ export default function Home() {
             >
               <h3 className="text-2xl font-bold text-white mb-6">Quick Facts</h3>
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span className="text-gray-300">📍 {personalInfo.location}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                  <span className="text-gray-300">🎓 CGPA: {personalInfo.cgpa}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-gray-300">📅 Expected Graduation: {personalInfo.graduation}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-gray-300">🏆 Reliance Foundation Scholar</span>
-                </div>
+                {quickFacts && (
+                  <>
+                    {quickFacts.location && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span className="text-gray-300">{quickFacts.location}</span>
+                      </div>
+                    )}
+                    {quickFacts.cgpa && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span className="text-gray-300">{quickFacts.cgpa}</span>
+                      </div>
+                    )}
+                    {quickFacts.graduation && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-gray-300">{quickFacts.graduation}</span>
+                      </div>
+                    )}
+                    {quickFacts.scholarship && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                        <span className="text-gray-300">{quickFacts.scholarship}</span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </motion.div>
 
@@ -204,27 +216,23 @@ export default function Home() {
             >
               <h3 className="text-2xl font-bold text-white mb-6">Current Focus</h3>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="text-white font-semibold">Machine Learning & AI</h4>
-                    <p className="text-gray-400 text-sm">Building predictive models and exploring generative AI</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="text-white font-semibold">Data Science Projects</h4>
-                    <p className="text-gray-400 text-sm">Creating tools for automated data analysis and visualization</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="text-white font-semibold">Open Source Contribution</h4>
-                    <p className="text-gray-400 text-sm">Contributing to the developer community through GitHub</p>
-                  </div>
-                </div>
+                {currentFocus && currentFocus.map((focus: any, index: number) => {
+                  const colors = ['blue-400', 'purple-400', 'green-400', 'yellow-400', 'pink-400'];
+                  const colorClass = colors[index % colors.length];
+                  
+                  return (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className={`w-2 h-2 bg-${colorClass} rounded-full mt-2`}></div>
+                      <div>
+                        <h4 className="text-white font-semibold flex items-center gap-2">
+                          {focus.icon && <span className="text-lg">{focus.icon}</span>}
+                          {focus.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm">{focus.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           </div>

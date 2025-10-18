@@ -6,7 +6,9 @@ import {
   EXPERIENCE, 
   EDUCATION, 
   CERTIFICATIONS, 
-  ACHIEVEMENTS 
+  ACHIEVEMENTS,
+  QUICK_FACTS,
+  CURRENT_FOCUS
 } from './data';
 
 export interface Resume {
@@ -32,6 +34,8 @@ export interface PortfolioData {
   education: typeof EDUCATION;
   certifications: typeof CERTIFICATIONS;
   achievements: typeof ACHIEVEMENTS;
+  quickFacts: typeof QUICK_FACTS;
+  currentFocus: typeof CURRENT_FOCUS;
   resumes: Resume[];
   lastUpdated: string;
 }
@@ -52,6 +56,8 @@ export function initializeData(): void {
       education: EDUCATION,
       certifications: CERTIFICATIONS,
       achievements: ACHIEVEMENTS,
+      quickFacts: QUICK_FACTS,
+      currentFocus: CURRENT_FOCUS,
       resumes: [],
       lastUpdated: new Date().toISOString(),
     };

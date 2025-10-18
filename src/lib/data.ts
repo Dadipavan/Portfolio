@@ -189,6 +189,33 @@ export const ACHIEVEMENTS = [
   },
 ];
 
+// Quick Facts Section
+export const QUICK_FACTS = {
+  location: '📍 Korukollu, Kalidindi Mandal, Andhra Pradesh, India',
+  cgpa: '🎓 CGPA: 9.1/10',
+  graduation: '📅 Expected Graduation: Jun 2026 (Expected)',
+  scholarship: '🏆 Reliance Foundation Scholar',
+};
+
+// Current Focus Section
+export const CURRENT_FOCUS = [
+  {
+    title: 'Machine Learning & AI',
+    description: 'Building predictive models and exploring generative AI',
+    icon: '🤖',
+  },
+  {
+    title: 'Data Science Projects',
+    description: 'Creating tools for automated data analysis and visualization',
+    icon: '📊',
+  },
+  {
+    title: 'Open Source Contribution',
+    description: 'Contributing to the developer community through GitHub',
+    icon: '🚀',
+  },
+];
+
 // Certifications (selected key ones)
 export const CERTIFICATIONS = [
   {

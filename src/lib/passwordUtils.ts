@@ -1,29 +1,20 @@
-// Password hashing utility
-import bcrypt from 'bcryptjs';
+// Simple password authentication utility
+// Removed bcrypt dependency for simpler authentication
 
-// Hash a password
-export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
+// Define the admin password directly
+const ADMIN_PASSWORD = 'TryPa$$wordDadi@6563or129';
+
+// Verify a password (simple string comparison)
+export function verifyPassword(password: string): boolean {
+  return password === ADMIN_PASSWORD;
 }
 
-// Verify a password
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
+// Get the admin password (for direct comparison)
+export function getAdminPassword(): string {
+  return ADMIN_PASSWORD;
 }
 
-// Generate a hash for your password (run this once to get the hash)
-export async function generatePasswordHash(password: string): Promise<void> {
-  const hash = await hashPassword(password);
-  console.log('Password hash for environment variable:');
-  console.log(`ADMIN_PASSWORD_HASH=${hash}`);
-}
-
-// Get the admin password hash from environment
-export function getAdminPasswordHash(): string {
-  const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!hash) {
-    throw new Error('ADMIN_PASSWORD_HASH environment variable is not set');
-  }
-  return hash;
+// Check if a password is valid
+export function isValidPassword(password: string): boolean {
+  return password === ADMIN_PASSWORD;
 }

@@ -32,12 +32,17 @@ export async function GET() {
 
     // Transform the data into the expected format
     const portfolioData: any = {
-      resumes: [], // Will be fetched separately if needed
+      resumes: [], // Initialize as empty array
       lastUpdated: new Date().toISOString()
     }
 
     portfolioSections.forEach(section => {
-      portfolioData[section.section] = section.data
+      if (section.section === 'resumes') {
+        // Ensure resumes is always an array
+        portfolioData[section.section] = Array.isArray(section.data) ? section.data : []
+      } else {
+        portfolioData[section.section] = section.data
+      }
     })
 
     // Get the latest update timestamp

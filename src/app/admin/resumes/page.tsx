@@ -37,9 +37,13 @@ export default function ResumesAdmin() {
   const loadResumes = async () => {
     try {
       const resumeList = await ResumeManager.getAllResumes();
-      setResumes(resumeList);
+      console.log('🔍 Loaded resumes:', resumeList);
+      // Ensure we always have an array
+      const safeResumeList = Array.isArray(resumeList) ? resumeList : [];
+      setResumes(safeResumeList);
     } catch (error) {
       console.error('Error loading resumes:', error);
+      setResumes([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -582,7 +586,7 @@ export default function ResumesAdmin() {
                 </button>
               </div>
             ) : (
-              resumes.map((resume, index) => (
+              Array.isArray(resumes) && resumes.map((resume, index) => (
                 <motion.div
                   key={resume.id}
                   initial={{ opacity: 0, y: 20 }}

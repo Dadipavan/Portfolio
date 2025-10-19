@@ -138,30 +138,65 @@ export class ResumeManager {
   // Delete resume
   static async deleteResume(resume: Resume): Promise<boolean> {
     try {
-      // Delete from cloud storage if applicable
-      if (resume.storageType === 'cloud' && resume.cloudFileName) {
-        await CloudStorageService.deleteFile(resume.cloudFileName)
+      console.log('🗑️ Deleting resume:', resume.name, '| Storage:', resume.storageType);
+
+      // Always use server API for proper deletion (handles both cloud and database)
+      try {
+        const res = await fetch(`/api/resumes/delete/${resume.id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            console.log('✅ Resume deleted via server API');
+            return true;
+          } else {
+            console.error('Server delete API error:', json.error);
+          }
+        } else {
+          console.error('Server delete API failed with status:', res.status);
+        }
+      } catch (err) {
+        console.error('Server delete API request failed:', err);
       }
-      
-      // Remove from portfolio data
-      const data = await getPortfolioData()
-      if (data?.resumes) {
-        const updatedResumes = data.resumes.filter(r => r.id !== resume.id)
-        await updatePortfolioSection('resumes', updatedResumes)
-        return true
+
+      // Fallback: attempt client-side deletion (for local files only)
+      console.log('⚠️ Falling back to client-side deletion');
+      const data = await getPortfolioData();
+      if (data?.resumes && Array.isArray(data.resumes)) {
+        const updatedResumes = data.resumes.filter(r => r.id !== resume.id);
+        await updatePortfolioSection('resumes', updatedResumes);
+        console.log('✅ Resume removed via client fallback');
+        return true;
       }
-      
-      return false
+
+      return false;
     } catch (error) {
-      console.error('Delete error:', error)
-      return false
+      console.error('Delete error:', error);
+      return false;
     }
   }
   
   // Get all resumes
   static async getAllResumes(): Promise<Resume[]> {
-    const data = await getPortfolioData()
-    return data?.resumes || []
+    try {
+      const data = await getPortfolioData()
+      console.log('📊 Portfolio data structure:', data)
+      
+      // Handle different data structures
+      if (data?.resumes && Array.isArray(data.resumes)) {
+        return data.resumes
+      }
+      
+      // Initialize empty resumes array if not found
+      console.log('⚠️ No resumes found in portfolio data, initializing empty array')
+      return []
+    } catch (error) {
+      console.error('Error in getAllResumes:', error)
+      return []
+    }
   }
   
   // Get resume by ID
@@ -174,7 +209,7 @@ export class ResumeManager {
   static async updateResume(id: string, updates: Partial<Resume>): Promise<boolean> {
     try {
       const data = await getPortfolioData()
-      if (data?.resumes) {
+      if (data?.resumes && Array.isArray(data.resumes)) {
         const resumeIndex = data.resumes.findIndex(r => r.id === id)
         if (resumeIndex !== -1) {
           data.resumes[resumeIndex] = { ...data.resumes[resumeIndex], ...updates }
@@ -286,10 +321,35 @@ export class ResumeManager {
   }
   
   private static async saveResumeRecord(resume: Resume): Promise<void> {
-    const data = await getPortfolioData()
-    if (data) {
-      const updatedResumes = [...(data.resumes || []), resume]
-      await updatePortfolioSection('resumes', updatedResumes)
+    try {
+      const data = await getPortfolioData()
+      console.log('📊 Data structure for saveResumeRecord:', data)
+      console.log('📊 data.resumes type:', typeof data?.resumes, 'isArray:', Array.isArray(data?.resumes))
+      
+      if (data) {
+        // Ensure resumes is always an array - handle all edge cases
+        let existingResumes: Resume[] = []
+        
+        if (data.resumes === null || data.resumes === undefined) {
+          console.log('⚠️ data.resumes is null/undefined, initializing empty array')
+          existingResumes = []
+        } else if (Array.isArray(data.resumes)) {
+          console.log('✅ data.resumes is array with', data.resumes.length, 'items')
+          existingResumes = data.resumes
+        } else {
+          console.log('⚠️ data.resumes is not array, type:', typeof data.resumes, 'value:', data.resumes)
+          existingResumes = []
+        }
+        
+        const updatedResumes = [...existingResumes, resume]
+        await updatePortfolioSection('resumes', updatedResumes)
+        console.log('💾 Resume record saved:', resume.name)
+      } else {
+        console.error('❌ No portfolio data found')
+      }
+    } catch (error) {
+      console.error('❌ Error in saveResumeRecord:', error)
+      throw error
     }
   }
 }

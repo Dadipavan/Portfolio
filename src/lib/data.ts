@@ -57,6 +57,7 @@ export const PROJECTS = [
       'Developed a C program to extract process details from /proc using PID; displays command-line, state, PPID, memory, threads, executable path with robust error handling.',
     technologies: ['C', 'Linux', 'System Programming'],
     githubUrl: 'https://github.com/Dadipavan/Process-Hunter',
+    liveUrl: '', // No live demo for system tool
     year: '2025',
     featured: true,
   },
@@ -68,6 +69,7 @@ export const PROJECTS = [
       'Built a no-code EDA app: upload datasets, compute descriptive stats, outlier detection, correlation heatmaps, basic feature engineering, downloadable processed datasets.',
     technologies: ['Python', 'Streamlit', 'Pandas', 'Data Analysis'],
     githubUrl: 'https://github.com/Dadipavan/EDA',
+    liveUrl: 'https://eda-dadipavan.streamlit.app/',
     year: '2025',
     featured: true,
   },
@@ -79,6 +81,7 @@ export const PROJECTS = [
       'Developed an LSTM-based time-series forecasting model for historical stock data with preprocessing, scaling, and evaluation. Deployed a Flask demo app for visualization.',
     technologies: ['Python', 'LSTM', 'TensorFlow', 'Flask', 'Time Series'],
     githubUrl: 'https://github.com/Dadipavan/stock-trend-prediction',
+    liveUrl: '', // Add your deployed Flask app URL here when available
     year: '2024',
     featured: true,
   },
@@ -89,6 +92,8 @@ export const PROJECTS = [
     description:
       'Built spam classifier using Naive Bayes and Logistic Regression with TF-IDF and standard NLP preprocessing to separate spam/ham emails.',
     technologies: ['Python', 'NLP', 'scikit-learn', 'TF-IDF'],
+    githubUrl: 'https://github.com/Dadipavan/Email-Spam-Classification',
+    liveUrl: '', // Add demo URL if deployed
     year: '2024',
     featured: false,
   },

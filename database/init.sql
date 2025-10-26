@@ -119,8 +119,10 @@ INSERT INTO portfolio_data (section, data) VALUES
     "description": "Developed a C program to extract process details from /proc using PID; displays command-line, state, PPID, memory, threads, executable path with robust error handling.",
     "technologies": ["C", "Linux", "System Programming"],
     "githubUrl": "https://github.com/Dadipavan/Process-Hunter",
+    "liveUrl": "",
     "year": "2025",
-    "featured": true
+    "featured": true,
+    "status": "completed"
   },
   {
     "id": 2,
@@ -129,8 +131,10 @@ INSERT INTO portfolio_data (section, data) VALUES
     "description": "Built a no-code EDA app: upload datasets, compute descriptive stats, outlier detection, correlation heatmaps, basic feature engineering, downloadable processed datasets.",
     "technologies": ["Python", "Streamlit", "Pandas", "Data Analysis"],
     "githubUrl": "https://github.com/Dadipavan/EDA",
+    "liveUrl": "https://eda-dadipavan.streamlit.app/",
     "year": "2025",
-    "featured": true
+    "featured": true,
+    "status": "completed"
   },
   {
     "id": 3,
@@ -139,8 +143,10 @@ INSERT INTO portfolio_data (section, data) VALUES
     "description": "Developed an LSTM-based time-series forecasting model for historical stock data with preprocessing, scaling, and evaluation. Deployed a Flask demo app for visualization.",
     "technologies": ["Python", "LSTM", "TensorFlow", "Flask", "Time Series"],
     "githubUrl": "https://github.com/Dadipavan/stock-trend-prediction",
+    "liveUrl": "",
     "year": "2024",
-    "featured": true
+    "featured": true,
+    "status": "completed"
   },
   {
     "id": 4,
@@ -148,8 +154,11 @@ INSERT INTO portfolio_data (section, data) VALUES
     "subtitle": "NLP Classification Model",
     "description": "Built spam classifier using Naive Bayes and Logistic Regression with TF-IDF and standard NLP preprocessing to separate spam/ham emails.",
     "technologies": ["Python", "NLP", "scikit-learn", "TF-IDF"],
+    "githubUrl": "https://github.com/Dadipavan/Email-Spam-Classification",
+    "liveUrl": "",
     "year": "2024",
-    "featured": false
+    "featured": false,
+    "status": "completed"
   }
 ]'),
 

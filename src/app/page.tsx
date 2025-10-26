@@ -400,15 +400,17 @@ export default function Home() {
                     <Github size={16} />
                     <span className="text-sm">Code</span>
                   </a>
-                  <a
-                    href={project.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-                  >
-                    <ExternalLink size={16} />
-                    <span className="text-sm">View</span>
-                  </a>
+                  {project.liveUrl && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                    >
+                      <ExternalLink size={16} />
+                      <span className="text-sm">Demo</span>
+                    </a>
+                  )}
                 </div>
               </motion.div>
             ))}

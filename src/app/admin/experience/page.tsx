@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Briefcase, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Briefcase, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -119,6 +119,22 @@ export default function ExperienceAdmin() {
       ...prev,
       description: prev.description?.map((item, i) => i === index ? value : item) || []
     }));
+  };
+
+  const moveExperience = async (index: number, direction: number) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= experiences.length) return;
+    const updated = [...experiences];
+    const [item] = updated.splice(index, 1);
+    updated.splice(newIndex, 0, item);
+    setExperiences(updated);
+    try {
+      await updatePortfolioSection('experience', updated);
+      console.log('✅ Experience order updated');
+    } catch (err) {
+      console.error('❌ Failed to update experience order', err);
+      alert('Failed to reorder experiences.');
+    }
   };
 
   const addDescription = () => {
@@ -363,6 +379,20 @@ export default function ExperienceAdmin() {
                   </div>
                   
                   <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => moveExperience(index, -1)}
+                      title="Move up"
+                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <ChevronUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => moveExperience(index, 1)}
+                      title="Move down"
+                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
                     <button
                       onClick={() => handleEdit(experience)}
                       className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

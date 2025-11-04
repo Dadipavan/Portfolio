@@ -19,10 +19,12 @@ export const PERSONAL_INFO = {
 export const TECHNICAL_SKILLS = [
   {
     category: 'Programming Languages',
+    emoji: '💻',
     skills: ['C', 'Python', 'Java', 'JavaScript', 'Shell scripting']
   },
   {
     category: 'Machine Learning & AI',
+    emoji: '🤖',
     skills: [
       'scikit-learn',
       'Pandas',
@@ -35,14 +37,17 @@ export const TECHNICAL_SKILLS = [
   },
   {
     category: 'Web Frontend',
+    emoji: '🌐',
     skills: ['HTML5', 'CSS3', 'Bootstrap', 'React.js']
   },
   {
     category: 'Tools & Databases',
+    emoji: '🛠️',
     skills: ['Linux/Unix', 'Git', 'VS Code', 'MySQL', 'Power BI', 'Streamlit', 'Flask']
   },
   {
     category: 'Soft Skills',
+    emoji: '🤝',
     skills: ['Problem solving', 'Team collaboration', 'Leadership', 'Quick learner']
   }
 ];

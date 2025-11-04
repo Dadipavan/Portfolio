@@ -11,6 +11,7 @@ const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 interface SkillCategory {
   category: string;
+  emoji: string;
   skills: string[];
 }
 
@@ -22,6 +23,7 @@ export default function SkillsAdmin() {
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState<SkillCategory>({
     category: '',
+    emoji: '',
     skills: []
   });
   const [newSkill, setNewSkill] = useState('');
@@ -41,22 +43,27 @@ export default function SkillsAdmin() {
         skillsData = [
           {
             category: 'Programming Languages',
+            emoji: '',
             skills: oldSkills.languages || []
           },
           {
             category: 'Machine Learning & AI',
+            emoji: '',
             skills: oldSkills.machineLearning || []
           },
           {
             category: 'Web Frontend',
+            emoji: '',
             skills: oldSkills.webFrontend || []
           },
           {
             category: 'Tools & Databases',
+            emoji: '',
             skills: oldSkills.toolsDb || []
           },
           {
             category: 'Soft Skills',
+            emoji: '',
             skills: oldSkills.softSkills || []
           }
         ].filter(category => category.skills.length > 0); // Only include categories with skills
@@ -95,8 +102,24 @@ export default function SkillsAdmin() {
     
     setEditingCategory(null);
     setShowAddForm(false);
-    setFormData({ category: '', skills: [] });
+  setFormData({ category: '', emoji: '', skills: [] });
     setNewSkill('');
+  };
+
+  const moveCategory = async (index: number, direction: number) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= skillCategories.length) return;
+    const updated = [...skillCategories];
+    const [item] = updated.splice(index, 1);
+    updated.splice(newIndex, 0, item);
+    setSkillCategories(updated);
+    try {
+      await updatePortfolioSection('technicalSkills', updated);
+      console.log('✅ Categories reordered');
+    } catch (err) {
+      console.error('❌ Failed to reorder categories', err);
+      alert('Failed to reorder categories.');
+    }
   };
 
   const handleEdit = (category: SkillCategory, index: number) => {
@@ -175,7 +198,7 @@ export default function SkillsAdmin() {
             onClick={() => {
               setShowAddForm(true);
               setEditingCategory(null);
-              setFormData({ category: '', skills: [] });
+              setFormData({ category: '', emoji: '', skills: [] });
               setNewSkill('');
             }}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
@@ -217,6 +240,19 @@ export default function SkillsAdmin() {
                   placeholder="e.g., Cloud Technologies, Big Data, DevOps"
                   required
                 />
+              </div>
+              
+              <div>
+                <label className={labelStyles}>Emoji (optional)</label>
+                <input
+                  type="text"
+                  value={formData.emoji || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, emoji: e.target.value }))}
+                  className={inputStyles}
+                  placeholder="e.g., 💻"
+                  maxLength={2}
+                />
+                <p className="text-xs text-gray-500 mt-1">Add an emoji to visually represent this category.</p>
               </div>
               
               <div>
@@ -318,11 +354,28 @@ export default function SkillsAdmin() {
                     >
                       {expandedCategories.has(index) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
-                    <h3 className="text-lg font-semibold text-gray-900">{category.category}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      {category.emoji && <span className="text-2xl leading-none">{category.emoji}</span>}
+                      <span>{category.category}</span>
+                    </h3>
                     <span className="text-sm text-gray-500">({category.skills.length} skills)</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => moveCategory(index, -1)}
+                        title="Move up"
+                        className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => moveCategory(index, 1)}
+                        title="Move down"
+                        className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
                     <button
                       onClick={() => handleEdit(category, index)}
                       className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

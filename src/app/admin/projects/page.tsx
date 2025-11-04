@@ -1,20 +1,6 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowLeft, 
-  Save,
-  Eye,
-  EyeOff,
-  Github,
-  ExternalLink,
-  Calendar,
-  Star
-} from 'lucide-react';
 import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -40,6 +26,25 @@ interface Project {
   role?: string;
 }
 
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  ArrowLeft, 
+  Save,
+  Eye,
+  EyeOff,
+  Github,
+  ExternalLink,
+  Calendar,
+  Star,
+  ArrowUp,
+  ArrowDown
+} from 'lucide-react';
+
+
 export default function ProjectsAdmin() {
   return (
     <AdminLayout>
@@ -49,6 +54,26 @@ export default function ProjectsAdmin() {
 }
 
 function ProjectsContent() {
+  // Move project up or down and persist order
+  const moveProject = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= projects.length) return;
+
+    const updated = [...projects];
+    const [item] = updated.splice(index, 1);
+    updated.splice(newIndex, 0, item);
+    setProjects(updated);
+
+    // Persist new order immediately
+    try {
+      await updatePortfolioSection('projects', normalizeProjects(updated));
+      console.log(`✅ Moved project ${index} ${direction}`);
+    } catch (error) {
+      console.error('❌ Failed to persist projects order:', error);
+      alert('Failed to save order change. Changes have been reverted.');
+      setProjects(projects);
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -61,7 +86,8 @@ function ProjectsContent() {
       const mappedProjects = data.projects.map(p => ({
         ...p,
         status: (p as any).status || 'completed',
-        liveUrl: (p as any).liveUrl,
+        liveUrl: (p as any).liveUrl || '',
+        githubUrl: (p as any).githubUrl || '',
         startDate: (p as any).startDate,
         endDate: (p as any).endDate,
         images: (p as any).images || [],
@@ -77,9 +103,34 @@ function ProjectsContent() {
     setLoading(false);
   }, []);
 
+  // Ensure project objects conform to default shape expected by PortfolioData
+  const normalizeProjects = (items: Project[]) => {
+    return items.map(p => ({
+      id: p.id,
+      title: p.title || '',
+      subtitle: p.subtitle || '',
+      description: p.description || '',
+      technologies: p.technologies || [],
+      year: p.year || new Date().getFullYear().toString(),
+      featured: typeof p.featured === 'boolean' ? p.featured : false,
+      status: p.status || 'completed',
+      githubUrl: p.githubUrl || '',
+      liveUrl: p.liveUrl || '',
+      startDate: p.startDate || '',
+      endDate: p.endDate || '',
+      images: p.images || [],
+      keyFeatures: p.keyFeatures || [],
+      challenges: p.challenges || '',
+      solutions: p.solutions || '',
+      learnings: p.learnings || '',
+      teamSize: p.teamSize || 0,
+      role: p.role || '',
+    }));
+  };
+
   const handleSave = async () => {
     try {
-      await updatePortfolioSection('projects', projects);
+      await updatePortfolioSection('projects', normalizeProjects(projects));
       console.log('✅ Projects updated successfully');
       
       setShowForm(false);
@@ -100,6 +151,8 @@ function ProjectsContent() {
       year: new Date().getFullYear().toString(),
       featured: false,
       status: 'completed',
+      githubUrl: '',
+      liveUrl: '',
     };
     setEditingProject(newProject);
     setShowForm(true);
@@ -116,7 +169,7 @@ function ProjectsContent() {
       setProjects(updatedProjects);
       
       try {
-        await updatePortfolioSection('projects', updatedProjects);
+        await updatePortfolioSection('projects', normalizeProjects(updatedProjects));
         console.log('✅ Project deleted successfully');
       } catch (error) {
         console.error('❌ Failed to delete project:', error);
@@ -136,7 +189,7 @@ function ProjectsContent() {
     setProjects(updatedProjects);
     
     try {
-      await updatePortfolioSection('projects', updatedProjects);
+      await updatePortfolioSection('projects', normalizeProjects(updatedProjects));
       console.log('✅ Project updated successfully');
       
       setShowForm(false);
@@ -159,7 +212,7 @@ function ProjectsContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="blackground-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
@@ -238,6 +291,24 @@ function ProjectsContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
+                    <div className="flex flex-col gap-1 mr-1">
+                      <button
+                        onClick={() => moveProject(index, 'up')}
+                        disabled={index === 0}
+                        title="Move up"
+                        className={`p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors ${index === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => moveProject(index, 'down')}
+                        disabled={index === projects.length - 1}
+                        title="Move down"
+                        className={`p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors ${index === projects.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
                     <button
                       onClick={() => handleEditProject(project)}
                       className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -300,7 +371,7 @@ function ProjectsContent() {
                     type="text"
                     value={editingProject?.title || ''}
                     onChange={(e) => updateField('title', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                     required
                   />
                 </div>
@@ -313,7 +384,7 @@ function ProjectsContent() {
                     type="text"
                     value={editingProject?.subtitle || ''}
                     onChange={(e) => updateField('subtitle', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   />
                 </div>
               </div>
@@ -326,7 +397,7 @@ function ProjectsContent() {
                   value={editingProject?.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   required
                 />
               </div>
@@ -340,7 +411,7 @@ function ProjectsContent() {
                     type="text"
                     value={editingProject?.year || ''}
                     onChange={(e) => updateField('year', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   />
                 </div>
 
@@ -351,7 +422,7 @@ function ProjectsContent() {
                   <select
                     value={editingProject?.status || 'completed'}
                     onChange={(e) => updateField('status', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   >
                     <option value="completed">Completed</option>
                     <option value="in-progress">In Progress</option>
@@ -381,7 +452,7 @@ function ProjectsContent() {
                     type="url"
                     value={editingProject?.githubUrl || ''}
                     onChange={(e) => updateField('githubUrl', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   />
                 </div>
 
@@ -393,7 +464,7 @@ function ProjectsContent() {
                     type="url"
                     value={editingProject?.liveUrl || ''}
                     onChange={(e) => updateField('liveUrl', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   />
                 </div>
               </div>
@@ -407,7 +478,7 @@ function ProjectsContent() {
                   value={editingProject?.technologies?.join(', ') || ''}
                   onChange={(e) => updateField('technologies', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
                   placeholder="React, TypeScript, Node.js, MongoDB"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                 />
               </div>
 

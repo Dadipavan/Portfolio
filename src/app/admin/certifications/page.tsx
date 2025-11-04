@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Award, Plus, Edit, Trash2 } from 'lucide-react';
+import { Save, Award, Plus, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -15,6 +15,10 @@ interface Certification {
   year: string;
   skills: string[];
   verificationUrl: string;
+  // optional file fields
+  imageUrl?: string;
+  imageFileName?: string;
+  storageType?: 'local' | 'cloud';
 }
 
 export default function CertificationsAdmin() {
@@ -30,7 +34,12 @@ export default function CertificationsAdmin() {
     year: '',
     skills: [],
     verificationUrl: '',
+    imageUrl: undefined,
+    imageFileName: undefined,
+    storageType: undefined,
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const data = getPortfolioDataSync();
@@ -58,12 +67,23 @@ export default function CertificationsAdmin() {
     }
   };
 
-  const addCertification = () => {
+  const addCertification = async () => {
     const newCertification: Certification = {
       ...formData,
       skills: formData.skills.filter(s => s.trim()),
     };
-    setCertifications([...certifications, newCertification]);
+    const updated = [...certifications, newCertification];
+    setCertifications(updated);
+
+    // persist immediately
+    try {
+      await updatePortfolioSection('certifications', updated);
+      console.log('✅ Certification added');
+    } catch (err) {
+      console.error('Failed to persist certifications after add:', err);
+      alert('Failed to save certification. Please try again.');
+    }
+
     resetForm();
     setShowAddForm(false);
   };
@@ -75,13 +95,63 @@ export default function CertificationsAdmin() {
       skills: formData.skills.filter(s => s.trim()),
     };
     setCertifications(updatedCertifications);
+
+    // persist immediately
+    updatePortfolioSection('certifications', updatedCertifications)
+      .then(() => console.log('✅ Certification updated'))
+      .catch(err => {
+        console.error('Failed to persist certifications after update:', err);
+        alert('Failed to save changes. Please try again.');
+      });
+
     resetForm();
     setEditingIndex(null);
   };
 
   const deleteCertification = (index: number) => {
     if (confirm('Are you sure you want to delete this certification?')) {
-      setCertifications(certifications.filter((_, i) => i !== index));
+      const certToDelete = certifications[index];
+
+      const doDelete = async () => {
+        // if file in cloud, try to remove it
+        if ((certToDelete as any).storageType === 'cloud' && (certToDelete as any).imageFileName) {
+          await deleteFileFromServer((certToDelete as any).imageFileName);
+        }
+
+        const updated = certifications.filter((_, i) => i !== index);
+        setCertifications(updated);
+
+        // persist immediately
+        updatePortfolioSection('certifications', updated)
+          .then(() => console.log('✅ Certification deleted'))
+          .catch(err => {
+            console.error('Failed to persist certifications after delete:', err);
+            alert('Failed to delete certification. Please try again.');
+          });
+      };
+
+      doDelete();
+    }
+  };
+
+  const moveCertification = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= certifications.length) return;
+
+    const updated = [...certifications];
+    const [item] = updated.splice(index, 1);
+    updated.splice(newIndex, 0, item);
+    setCertifications(updated);
+
+    // Persist new order immediately
+    try {
+      await updatePortfolioSection('certifications', updated);
+      console.log(`✅ Moved certification ${index} ${direction}`);
+    } catch (error) {
+      console.error('❌ Failed to persist certifications order:', error);
+      alert('Failed to save order change. Changes have been reverted.');
+      // revert locally
+      setCertifications(certifications);
     }
   };
 
@@ -92,6 +162,9 @@ export default function CertificationsAdmin() {
       year: cert.year,
       skills: [...cert.skills],
       verificationUrl: cert.verificationUrl || '',
+      imageUrl: (cert as any).imageUrl,
+      imageFileName: (cert as any).imageFileName,
+      storageType: (cert as any).storageType,
     });
     setEditingIndex(index);
     setShowAddForm(false);
@@ -107,6 +180,76 @@ export default function CertificationsAdmin() {
     });
     setEditingIndex(null);
     setShowAddForm(false);
+  };
+
+  // Upload helper: sends file to serverless API which stores in 'certificates' bucket
+  const uploadFileToServer = async (file: File) => {
+    try {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append('file', file);
+
+      const res = await fetch('/api/upload/certificate', {
+        method: 'POST',
+        body: fd,
+      });
+
+      const json = await res.json();
+      setUploading(false);
+
+      if (!json.success) throw new Error(json.error || 'Upload failed');
+      return { fileName: json.fileName, publicUrl: json.publicUrl };
+    } catch (err) {
+      setUploading(false);
+      console.error('Upload error:', err);
+      alert('File upload failed. See console for details.');
+      return null;
+    }
+  };
+
+  const deleteFileFromServer = async (fileName?: string) => {
+    if (!fileName) return false;
+    try {
+      const res = await fetch('/api/upload/certificate/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName })
+      });
+      const json = await res.json();
+      return json.success;
+    } catch (err) {
+      console.error('Delete file error:', err);
+      return false;
+    }
+  };
+
+  const handleFileChange = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+
+    const result = await uploadFileToServer(file);
+    if (result) {
+      setFormData({
+        ...formData,
+        imageUrl: result.publicUrl,
+        imageFileName: result.fileName,
+        storageType: 'cloud'
+      });
+      setSelectedFile(null);
+    }
+  };
+
+  const removeImageFromForm = async () => {
+    if (formData.storageType === 'cloud' && formData.imageFileName) {
+      const ok = await deleteFileFromServer(formData.imageFileName);
+      if (!ok) {
+        alert('Failed to delete file from storage. Check console for details.');
+        return;
+      }
+    }
+
+    setFormData({ ...formData, imageUrl: undefined, imageFileName: undefined, storageType: undefined });
   };
 
   const updateSkill = (index: number, value: string) => {
@@ -237,6 +380,39 @@ export default function CertificationsAdmin() {
               </div>
 
               <div>
+                <label className={labelStyles}>Certificate Image / PDF (optional)</label>
+                <div className="flex items-center gap-4 mb-2">
+                  {formData.imageUrl ? (
+                    <div className="flex items-center gap-3">
+                      {/* Show image preview if it's an image, otherwise show link for PDFs */}
+                      {formData.imageUrl.endsWith('.pdf') ? (
+                        <a href={formData.imageUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">View PDF</a>
+                      ) : (
+                        <img src={formData.imageUrl} alt="cert preview" className="w-28 h-20 object-cover rounded-md border" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={removeImageFromForm}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500">No file attached</div>
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full"
+                />
+                {uploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
+              </div>
+
+              <div>
                 <label className={labelStyles}>Skills/Technologies</label>
                 <div className="space-y-2">
                   {formData.skills.map((skill, index) => (
@@ -321,6 +497,24 @@ export default function CertificationsAdmin() {
                   )}
                 </div>
                 <div className="flex gap-2 ml-4">
+                  <div className="flex flex-col gap-1 mr-1">
+                    <button
+                      onClick={() => moveCertification(index, 'up')}
+                      disabled={index === 0}
+                      title="Move up"
+                      className={`p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors ${index === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => moveCertification(index, 'down')}
+                      disabled={index === certifications.length - 1}
+                      title="Move down"
+                      className={`p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors ${index === certifications.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:text-gray-700'}`}
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                  </div>
                   <button
                     onClick={() => startEdit(cert, index)}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

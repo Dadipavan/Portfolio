@@ -67,13 +67,15 @@ export default function Home() {
   const { personalInfo, technicalSkills, projects, experience, education, certifications, achievements, quickFacts, currentFocus } = portfolioData;
   
   // Ensure technicalSkills is always an array (handle both old and new data formats)
-  const skillsArray = Array.isArray(technicalSkills) ? technicalSkills : [
-    { category: 'Programming Languages', skills: technicalSkills?.languages || [] },
-    { category: 'Machine Learning & AI', skills: technicalSkills?.machineLearning || [] },
-    { category: 'Web Frontend', skills: technicalSkills?.webFrontend || [] },
-    { category: 'Tools & Databases', skills: technicalSkills?.toolsDb || [] },
-    { category: 'Soft Skills', skills: technicalSkills?.softSkills || [] }
-  ].filter(category => category.skills.length > 0);
+  const skillsArray = Array.isArray(technicalSkills)
+    ? technicalSkills
+    : [
+        { category: 'Programming Languages', emoji: '', skills: technicalSkills?.languages || [] },
+        { category: 'Machine Learning & AI', emoji: '', skills: technicalSkills?.machineLearning || [] },
+        { category: 'Web Frontend', emoji: '', skills: technicalSkills?.webFrontend || [] },
+        { category: 'Tools & Databases', emoji: '', skills: technicalSkills?.toolsDb || [] },
+        { category: 'Soft Skills', emoji: '', skills: technicalSkills?.softSkills || [] }
+      ].filter(category => category.skills.length > 0);
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <MobileMenu isOpen={mobileMenuOpen} setIsOpen={setMobileMenuOpen} />
@@ -292,7 +294,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {skillsArray.map((skillCategory: any, index: number) => {
               // Define emojis for different categories
               const categoryEmojis: { [key: string]: string } = {
@@ -308,7 +310,10 @@ export default function Home() {
                 'Mobile Development': '📱'
               };
               
-              const emoji = categoryEmojis[skillCategory.category] || '⚡';
+              // Prefer emoji stored in data, fall back to mapping, then to generic icon
+              const emoji = (skillCategory.emoji && skillCategory.emoji.trim())
+                ? skillCategory.emoji
+                : categoryEmojis[skillCategory.category] || '⚡';
               
               return (
                 <motion.div
@@ -317,7 +322,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10"
+                  className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10"
                 >
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="text-2xl">{emoji}</span>

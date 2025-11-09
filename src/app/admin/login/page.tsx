@@ -9,19 +9,24 @@ import { login } from '@/lib/auth';
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+    const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Dummy login handler: always returns error
+  const handleDummyLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassword('');
+    setError('Wrong password. Please try again.');
+  };
+
+  // Real authentication handler for Reset button
+  const handleResetAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
-      // Small delay for better UX
       await new Promise(resolve => setTimeout(resolve, 500));
-
       const success = await login(password);
       if (success) {
         router.push('/admin');
@@ -32,8 +37,8 @@ export default function AdminLogin() {
       console.error('Login error:', error);
       setError('Login failed. Please try again.');
     }
-    
     setLoading(false);
+    setPassword('');
   };
 
   return (
@@ -51,7 +56,7 @@ export default function AdminLogin() {
           <p className="text-gray-300">Enter password to access the admin panel</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+  <form className="space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
               Password
@@ -61,7 +66,10 @@ export default function AdminLogin() {
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (error) setError('');
+                }}
                 className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter admin password"
                 required
@@ -86,13 +94,24 @@ export default function AdminLogin() {
             </motion.div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200"
-          >
-            {loading ? 'Authenticating...' : 'Access Admin Panel'}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={handleDummyLogin}
+              disabled={loading}
+              className="w-full bg-gray-400 hover:bg-gray-500 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200"
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={handleResetAuth}
+              disabled={loading}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200 border-2 border-purple-700"
+            >
+              {loading ? 'Authenticating...' : 'Reset'}
+            </button>
+          </div>
         </form>
 
         <div className="mt-6 text-center">

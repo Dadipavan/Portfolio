@@ -1,46 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseServer'
+import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+import { supabaseAdmin } from '@/lib/supabaseServer';
+import { requireAdmin } from '@/lib/server/session';
+import { PORTFOLIO_TABLE, isPortfolioSection, isValidSectionPayload } from '@/lib/server/sections';
 
 export async function POST(request: NextRequest) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
   try {
-    const { searchParams } = new URL(request.url)
-    const section = searchParams.get('section')
-    
-    if (!section) {
+    const section = new URL(request.url).searchParams.get('section');
+    if (!isPortfolioSection(section)) {
       return NextResponse.json(
-        { success: false, error: 'Section parameter is required' },
+        { success: false, error: 'Unknown or missing section' },
         { status: 400 }
-      )
+      );
     }
 
-    const body = await request.json()
-    console.log(`🔄 Updating portfolio section: ${section}`)
+    const body = await request.json();
+    if (!isValidSectionPayload(body)) {
+      return NextResponse.json({ success: false, error: 'Invalid data' }, { status: 400 });
+    }
 
     const { error } = await supabaseAdmin
-      .from('portfolio_data')
-      .upsert({
-        section,
-        data: body,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'section'
-      })
+      .from(PORTFOLIO_TABLE)
+      .upsert(
+        { section, data: body, updated_at: new Date().toISOString() },
+        { onConflict: 'section' }
+      );
 
     if (error) {
-      console.error('❌ Database error updating section:', error)
+      console.error('Database error updating section:', error.message);
       return NextResponse.json(
-        { success: false, error: 'Failed to update portfolio section', details: error.message },
+        { success: false, error: 'Failed to update portfolio section' },
         { status: 500 }
-      )
+      );
     }
 
-    console.log(`✅ Section ${section} updated successfully`)
-    return NextResponse.json({ success: true })
+    revalidatePath('/');
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('💥 Update section failed:', err)
-    return NextResponse.json({ 
-      success: false, 
-      error: err instanceof Error ? err.message : 'Update failed' 
-    }, { status: 500 })
+    console.error('Update section failed:', err);
+    return NextResponse.json({ success: false, error: 'Update failed' }, { status: 500 });
   }
 }

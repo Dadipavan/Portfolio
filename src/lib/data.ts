@@ -1,3 +1,6 @@
+import { DEFAULT_ROLES } from './roles';
+import type { SiteSettings } from './types';
+
 // Personal Information
 export const PERSONAL_INFO = {
   name: 'Valavala Dadi Naga Siva Sai Pavan',
@@ -257,3 +260,63 @@ export const CERTIFICATIONS = [
     verificationUrl: '', // Add verification URL when available
   },
 ];
+
+// Site settings (editable in the admin panel under Appearance, Roles, Text and labels and Site settings).
+// Section intro texts and other wording live in the text registry (copy.ts); only edited entries are stored.
+export const SITE_SETTINGS: SiteSettings = {
+  kicker: 'Data enthusiast',
+  availability: {
+    enabled: false,
+    text: 'Open to opportunities',
+  },
+  copy: {},
+  additionalCertifications: [
+    'Introduction to Data Science with Python – edX (2024)',
+    'Introduction to Prompt Engineering – edX (2024)',
+    'Data Analytics Basics for Everyone (DA0100) – IBM via edX (2024)',
+    'Python Basics for Data Science – edX (2024)',
+    'Cisco Networking Academy Course – Cisco (2023)',
+    'Multiple IBM Cloud and AI certifications',
+  ],
+  contactTopics: ['General message', 'Job opportunity', 'Project or collaboration', 'Feedback'],
+  appearance: {
+    layout: 'dashboard',
+    theme: 'layout',
+    allowVisitorTheme: true,
+    accent: 'blue',
+    animations: true,
+    widgets: ['kpis', 'radar', 'perYear', 'techMap', 'heatmap'],
+  },
+  features: {
+    roleSwitch: true,
+    quickView: true,
+    explorer: true,
+    searchPalette: true,
+    timeline: true,
+    queryBar: true,
+    charts: true,
+    heroChart: true,
+    countUp: true,
+    pipelineMotif: true,
+    dataDownloads: true,
+    demoPreviews: true,
+    caseStudies: true,
+    workWithMe: true,
+    shareTools: true,
+    recommendations: true,
+    insights: true,
+  },
+  roles: DEFAULT_ROLES,
+  sections: { order: [], hidden: [] },
+  workWithMe: {
+    enabled: true,
+    roles: ['Data Scientist', 'Data Engineer', 'Data Analyst', 'Machine Learning Engineer'],
+    location: '',
+    remote: '',
+    startDate: '',
+    contact: '',
+    bookingUrl: '',
+    note: '',
+  },
+  highlights: [],
+};

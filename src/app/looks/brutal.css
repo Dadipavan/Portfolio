@@ -1,0 +1,668 @@
+/* Look: brutal (Brutalist)
+   3px outlines, hard offset shadows (no blur), loud flat blocks (yellow, hot pink, cyan) on off-white,
+   chunky uppercase headings, square corners. Dark: black page, white outlines, the same blocks.
+   Everything is scoped to html[data-layout="brutal"]. Text on a coloured block is always dark: every block
+   re-declares the colour tokens (the "on-block" scope below), so shared components stay readable on it. */
+
+/* ------------------------------------------------------------------ */
+/* Tokens                                                               */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"]:not([data-theme="dark"]) {
+  color-scheme: light;
+  --color-page: #fbf7ea;
+  --color-card: #ffffff;
+  --color-surface: #fff0a3;
+  --color-ink: #000000;
+  --color-body: #111111;
+  --color-muted: #2b2b2b;
+  --color-subtle: #454545;
+  --color-line: #000000;
+  --color-line-strong: #000000;
+  --color-control: #000000;
+  --color-accent: #d6006f;
+  --color-accent-strong: #a8005a;
+  --color-accent-ink: #b00058;
+  --color-accent-soft: #ffe500;
+  --color-accent-soft-ink: #000000;
+  --b-edge: #000000;
+  --b-line: #000000;
+  --b-focus: #0a1fd0;
+}
+html[data-layout="brutal"][data-theme="dark"]:not(.b1):not(.b2) {
+  color-scheme: dark;
+  --color-page: #000000;
+  --color-card: #0b0b0b;
+  --color-surface: #141414;
+  --color-ink: #ffffff;
+  --color-body: #f2f2f2;
+  --color-muted: #d2d2d2;
+  --color-subtle: #b8b8b8;
+  --color-line: #ffffff;
+  --color-line-strong: #ffffff;
+  --color-control: #ffffff;
+  --color-accent: #d6006f;
+  --color-accent-strong: #a8005a;
+  --color-accent-ink: #ff7ab8;
+  --color-accent-soft: #ffe500;
+  --color-accent-soft-ink: #000000;
+  --b-edge: #ffffff;
+  --b-line: #ffffff;
+  --b-focus: #00e5ff;
+}
+html[data-layout="brutal"] {
+  --radius-card: 0px;
+  --b-yellow: #ffe500;
+  --b-pink: #ff4fa3;
+  --b-cyan: #19d9ff;
+  --b-black: #000000;
+  --b-white: #ffffff;
+  --b-off: 4px;
+  --b-off-lg: 6px;
+  --b-shadow: 4px 4px 0 var(--b-edge);
+  --b-shadow-lg: 6px 6px 0 var(--b-edge);
+  --b-shadow-hover: 7px 7px 0 var(--b-edge);
+  --font-display: var(--font-space-grotesk), var(--font-sans);
+  --shadow-card: var(--b-shadow);
+  --shadow-lift: var(--b-shadow-hover);
+}
+@media (min-width: 640px) {
+  html[data-layout="brutal"] {
+    --b-shadow: 5px 5px 0 var(--b-edge);
+    --b-shadow-lg: 10px 10px 0 var(--b-edge);
+    --b-shadow-hover: 8px 8px 0 var(--b-edge);
+  }
+}
+
+/* The on-block scope: coloured blocks carry dark ink and black outlines in both themes */
+html[data-layout="brutal"] .brutal-block,
+html[data-layout="brutal"] .kpi-tile,
+html[data-layout="brutal"] .facts-item,
+html[data-layout="brutal"] .tabs-nav,
+html[data-layout="brutal"] .site-main ~ footer,
+html[data-layout="brutal"] .badge-ok,
+html[data-layout="brutal"] .kicker {
+  --color-card: #ffffff;
+  --color-surface: #ffffff;
+  --color-ink: #000000;
+  --color-body: #0d0d0d;
+  --color-muted: #1f1f1f;
+  --color-subtle: #333333;
+  --color-line: #000000;
+  --color-line-strong: #000000;
+  --color-control: #000000;
+  --color-accent-ink: #5c002d;
+  --color-accent-soft: #ffffff;
+  --color-accent-soft-ink: #000000;
+  --b-line: #000000;
+  --b-focus: #000000;
+  color: #000000;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] body {
+  font-family: var(--font-display);
+  background: var(--color-page);
+  color: var(--color-body);
+}
+html[data-layout="brutal"] section[id] {
+  scroll-margin-top: 7.75rem;
+}
+@media (min-width: 1024px) {
+  html[data-layout="brutal"] section[id] {
+    scroll-margin-top: 5.5rem;
+  }
+}
+html[data-layout="brutal"] ::selection {
+  background: var(--b-yellow);
+  color: #000000;
+}
+html[data-layout="brutal"] :focus-visible {
+  outline: 4px solid var(--b-focus);
+  outline-offset: 3px;
+}
+html[data-layout="brutal"] .site-main > section:nth-of-type(even) {
+  background: var(--color-surface);
+  border-block: 3px solid var(--b-edge);
+}
+html[data-layout="brutal"] .brutal-hero {
+  overflow-x: clip;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tab menu: yellow bar, sticker tabs                                   */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] .tabs-nav {
+  background: var(--b-yellow);
+  border-bottom: 3px solid var(--b-edge);
+  font-family: var(--font-display);
+}
+html[data-layout="brutal"] .tabs-bar > div:last-child > div {
+  background: #000000;
+}
+html[data-layout="brutal"] .tabs-brand {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  background: var(--b-pink);
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0 #000000;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transform: rotate(-1.5deg);
+  max-width: 100%;
+}
+html[data-layout="brutal"] .tabs-list {
+  padding: 0.3rem 6px 7px 0.3rem;
+  gap: 0.6rem;
+  scroll-padding-inline: 0.5rem;
+}
+html[data-layout="brutal"] .tabs-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.85rem;
+  background: #ffffff;
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0 #000000;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.12s steps(2),
+    box-shadow 0.12s steps(2),
+    background-color 0.12s steps(2);
+}
+html[data-layout="brutal"] .tabs-list > li:nth-child(odd) .tabs-tab {
+  transform: rotate(-1deg);
+}
+html[data-layout="brutal"] .tabs-list > li:nth-child(even) .tabs-tab {
+  transform: rotate(1deg);
+}
+html[data-layout="brutal"] .tabs-tab:hover {
+  background: var(--b-cyan);
+  transform: translate(-2px, -2px) rotate(0deg);
+  box-shadow: 5px 5px 0 #000000;
+}
+html[data-layout="brutal"] .tabs-tab[aria-current="true"] {
+  background: #000000;
+  color: #ffffff;
+  transform: translate(2px, 2px) rotate(0deg);
+  box-shadow: 1px 1px 0 #000000;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+html[data-layout="brutal"] .tabs-tab[aria-current="true"]:hover {
+  background: #000000;
+}
+html[data-layout="brutal"] .tabs-tools button,
+html[data-layout="brutal"] .tabs-tools a {
+  background: #ffffff;
+  color: #000000;
+  border: 3px solid #000000;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000000;
+  font-weight: 800;
+}
+html[data-layout="brutal"] .tabs-tools button:hover,
+html[data-layout="brutal"] .tabs-tools a:hover {
+  background: var(--b-cyan);
+  color: #000000;
+}
+html[data-layout="brutal"] .tabs-nav [class*="rounded"] {
+  border-radius: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                 */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] .brutal-block {
+  background: var(--b-yellow);
+  border: 3px solid var(--b-edge);
+  box-shadow: var(--b-shadow-lg);
+  padding: 1.25rem 1rem;
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  html[data-layout="brutal"] .brutal-block {
+    padding: 2rem 2rem 2.25rem;
+  }
+}
+html[data-layout="brutal"] .hero-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.25rem, 9.5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1024px) {
+  html[data-layout="brutal"] .hero-name {
+    font-size: clamp(3rem, 5.4vw, 5.75rem);
+  }
+}
+html[data-layout="brutal"] .hero-greeting {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  background: #000000;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-layout="brutal"] .hero-role {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: #000000;
+}
+html[data-layout="brutal"] .hero-summary,
+html[data-layout="brutal"] .hero-subtitle {
+  color: #111111;
+}
+
+/* the photo: a sticker */
+html[data-layout="brutal"] .brutal-photo .photo-clip {
+  border: 3px solid var(--b-edge);
+  border-radius: 0;
+  box-shadow: var(--b-shadow-lg);
+  background: var(--b-cyan);
+}
+html[data-layout="brutal"] .brutal-photo {
+  transform: rotate(-2deg);
+}
+html[data-layout="brutal"] .photo-monogram {
+  background: var(--b-pink);
+  color: #000000;
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+
+/* facts: loud stacked boxes */
+html[data-layout="brutal"] .facts-strip {
+  gap: 0.85rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  padding-right: 6px;
+  padding-bottom: 6px;
+}
+html[data-layout="brutal"] .facts-item {
+  background: var(--b-cyan);
+  border: 3px solid var(--b-edge);
+  box-shadow: var(--b-shadow);
+  padding: 0.9rem 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+html[data-layout="brutal"] .facts-item:nth-child(3n + 2) {
+  background: var(--b-pink);
+}
+html[data-layout="brutal"] .facts-item:nth-child(3n) {
+  background: var(--b-yellow);
+}
+html[data-layout="brutal"] .facts-item dt {
+  color: #000000;
+  font-weight: 800;
+}
+html[data-layout="brutal"] .facts-item dd {
+  font-weight: 700;
+}
+
+/* number tiles */
+html[data-layout="brutal"] .kpi-tiles {
+  padding-right: 6px;
+  padding-bottom: 6px;
+}
+html[data-layout="brutal"] .kpi-tile {
+  background: var(--b-yellow);
+  border: 3px solid var(--b-edge);
+  border-radius: 0;
+  box-shadow: var(--b-shadow-lg);
+  min-width: 0;
+}
+html[data-layout="brutal"] .kpi-tile:nth-child(4n + 2) {
+  background: var(--b-pink);
+}
+html[data-layout="brutal"] .kpi-tile:nth-child(4n + 3) {
+  background: var(--b-cyan);
+}
+html[data-layout="brutal"] .kpi-tile:nth-child(4n) {
+  background: #ffffff;
+}
+html[data-layout="brutal"] .kpi-bar {
+  display: none;
+}
+html[data-layout="brutal"] .kpi-value {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #000000;
+}
+html[data-layout="brutal"] .kpi-label {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/* Section headings                                                     */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] .section-frame {
+  overflow-x: clip;
+}
+html[data-layout="brutal"] .section-eyebrow {
+  color: var(--color-ink);
+  gap: 0.6rem;
+}
+html[data-layout="brutal"] .section-number {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  background: var(--b-pink);
+  color: #000000;
+  border: 3px solid var(--b-edge);
+  box-shadow: 3px 3px 0 var(--b-edge);
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+html[data-layout="brutal"] .section-rule {
+  display: none;
+}
+html[data-layout="brutal"] .section-label {
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+html[data-layout="brutal"] .section-title {
+  display: inline-block;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.85rem, 6.2vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  border-bottom: 8px solid var(--b-pink);
+  padding-bottom: 0.15em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+html[data-layout="brutal"] .section-intro {
+  color: var(--color-body);
+  font-weight: 500;
+}
+html[data-layout="brutal"] .site-main h3,
+html[data-layout="brutal"] .site-main h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+html[data-layout="brutal"] .site-main h3 {
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ */
+/* Components                                                           */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] .card,
+html[data-layout="brutal"] .tile {
+  background: var(--color-card);
+  border: 3px solid var(--b-edge);
+  border-radius: 0;
+  box-shadow: var(--b-shadow);
+}
+html[data-layout="brutal"] .card-hover {
+  transition:
+    transform 0.12s steps(2),
+    box-shadow 0.12s steps(2);
+}
+html[data-layout="brutal"] .card-hover:hover {
+  transform: translate(-3px, -3px);
+  border-color: var(--b-edge);
+  box-shadow: var(--b-shadow-hover);
+}
+html[data-layout="brutal"] .site-main [class*="rounded-"]:not(.photo-clip):not(.rounded-full) {
+  border-radius: 0;
+}
+html[data-layout="brutal"] .site-main [class*="border-line"] {
+  border-color: var(--b-line);
+}
+
+html[data-layout="brutal"] .btn-primary,
+html[data-layout="brutal"] .btn-secondary,
+html[data-layout="brutal"] .btn-ghost {
+  border-radius: 0;
+  border: 3px solid var(--b-line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition:
+    transform 0.12s steps(2),
+    box-shadow 0.12s steps(2),
+    background-color 0.12s steps(2);
+}
+html[data-layout="brutal"] .btn-primary,
+html[data-layout="brutal"] .btn-secondary {
+  box-shadow: 4px 4px 0 var(--b-line);
+}
+html[data-layout="brutal"] .btn-primary {
+  background: var(--b-pink);
+  color: #000000;
+}
+html[data-layout="brutal"] .btn-secondary {
+  background: var(--b-cyan);
+  color: #000000;
+}
+html[data-layout="brutal"] .btn-primary:hover,
+html[data-layout="brutal"] .btn-secondary:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--b-line);
+}
+html[data-layout="brutal"] .btn-primary:active,
+html[data-layout="brutal"] .btn-secondary:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--b-line);
+}
+html[data-layout="brutal"] .btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+html[data-layout="brutal"] .btn-ghost:hover {
+  background: var(--b-cyan);
+  color: #000000;
+  border-color: var(--b-line);
+  box-shadow: 3px 3px 0 var(--b-line);
+}
+html[data-layout="brutal"] .hero-actions {
+  padding-right: 6px;
+  padding-bottom: 6px;
+  gap: 0.9rem;
+}
+
+html[data-layout="brutal"] .chip,
+html[data-layout="brutal"] .tag,
+html[data-layout="brutal"] .kbd,
+html[data-layout="brutal"] .track-chip {
+  border-radius: 0;
+  border-width: 2px;
+  font-weight: 700;
+}
+html[data-layout="brutal"] .chip,
+html[data-layout="brutal"] .tag,
+html[data-layout="brutal"] .kbd {
+  border-color: var(--b-line);
+  background: var(--color-card);
+  color: var(--color-ink);
+}
+html[data-layout="brutal"] .tag:hover {
+  background: var(--b-yellow);
+  color: #000000;
+  border-color: var(--b-line);
+}
+html[data-layout="brutal"] .track-chip {
+  border-color: var(--track-dot);
+}
+html[data-layout="brutal"] .pill {
+  border-radius: 0;
+  border: 3px solid var(--b-line);
+  background: var(--color-card);
+  color: var(--color-ink);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 var(--b-line);
+}
+html[data-layout="brutal"] .pill:hover {
+  background: var(--b-cyan);
+  color: #000000;
+  border-color: var(--b-line);
+}
+html[data-layout="brutal"] .pill[aria-pressed="true"],
+html[data-layout="brutal"] .pill[aria-selected="true"],
+html[data-layout="brutal"] .pill[data-active="true"] {
+  background: var(--b-pink);
+  color: #000000;
+  border-color: var(--b-line);
+  box-shadow: 1px 1px 0 var(--b-line);
+  transform: translate(2px, 2px);
+}
+html[data-layout="brutal"] .field {
+  border: 3px solid var(--b-line);
+  border-radius: 0;
+  background: var(--color-card);
+  color: var(--color-ink);
+  box-shadow: 3px 3px 0 var(--b-line);
+}
+html[data-layout="brutal"] .field:focus {
+  background: var(--b-yellow);
+  color: #000000;
+}
+html[data-layout="brutal"] .field::placeholder {
+  color: var(--color-subtle);
+}
+html[data-layout="brutal"] .field:focus::placeholder {
+  color: #333333;
+}
+
+html[data-layout="brutal"] .badge-ok {
+  border: 3px solid #000000;
+  border-radius: 0;
+  background: var(--b-cyan);
+  color: #000000;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 #000000;
+}
+html[data-layout="brutal"] .kicker {
+  border: 3px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 800;
+}
+html[data-layout="brutal"] .mono-label {
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                               */
+/* ------------------------------------------------------------------ */
+html[data-layout="brutal"] .site-main ~ footer {
+  background: var(--b-cyan);
+  border-top: 3px solid var(--b-edge);
+  color: #000000;
+}
+html[data-layout="brutal"] .site-main ~ footer a:not(.btn-secondary),
+html[data-layout="brutal"] .site-main ~ footer button:not(.btn-secondary) {
+  color: #000000;
+  border-radius: 0;
+}
+html[data-layout="brutal"] .site-main ~ footer a:not(.btn-secondary):hover,
+html[data-layout="brutal"] .site-main ~ footer button:not(.btn-secondary):hover {
+  background: var(--b-yellow);
+  color: #000000;
+}
+html[data-layout="brutal"] .site-main ~ footer .btn-secondary {
+  background: #ffffff;
+}
+html[data-layout="brutal"] .site-main ~ footer .btn-secondary:hover {
+  background: var(--b-yellow);
+}
+html[data-layout="brutal"] .site-main ~ footer p:first-child {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phones                                                               */
+/* ------------------------------------------------------------------ */
+@media (max-width: 479px) {
+  html[data-layout="brutal"] .tabs-brand {
+    font-size: 0.9rem;
+  }
+  html[data-layout="brutal"] .brutal-block {
+    padding: 1rem 0.85rem 1.25rem;
+  }
+  html[data-layout="brutal"] .brutal-photo {
+    max-width: 11rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                               */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-layout="brutal"] *,
+  html[data-layout="brutal"] *::before,
+  html[data-layout="brutal"] *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+  html[data-layout="brutal"] .card-hover:hover,
+  html[data-layout="brutal"] .btn-primary:hover,
+  html[data-layout="brutal"] .btn-secondary:hover,
+  html[data-layout="brutal"] .tabs-tab:hover {
+    transform: none;
+  }
+}
+html[data-layout="brutal"][data-motion="off"] *,
+html[data-layout="brutal"][data-motion="off"] *::before,
+html[data-layout="brutal"][data-motion="off"] *::after {
+  transition: none !important;
+  animation: none !important;
+}
+html[data-layout="brutal"][data-motion="off"] .card-hover:hover,
+html[data-layout="brutal"][data-motion="off"] .btn-primary:hover,
+html[data-layout="brutal"][data-motion="off"] .btn-secondary:hover,
+html[data-layout="brutal"][data-motion="off"] .tabs-tab:hover {
+  transform: none;
+}

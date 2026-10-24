@@ -1,0 +1,300 @@
+/* Look: portrait. Warm and photo-led: cream and terracotta, a soft serif, an arch portrait, rounded soft cards.
+   Everything is scoped to the root attribute (data-layout is set on <html>). */
+
+/* ---------- colours (this look brings its own, so the accent choice is ignored) ---------- */
+html[data-layout="portrait"],
+html[data-layout="portrait"][data-accent] {
+  --color-page: #fbf5ec;
+  --color-card: #fffdf8;
+  --color-surface: #f5ebdd;
+  --color-ink: #3a2418;
+  --color-body: #4f372a;
+  --color-muted: #664b3c;
+  --color-subtle: #735745;
+  --color-line: #e9dac6;
+  --color-line-strong: #d3bba0;
+  --color-control: #8c7055;
+  --color-accent: #a8431f;
+  --color-accent-strong: #8a3416;
+  --color-accent-ink: #a8431f;
+  --color-accent-soft: #f9e4d7;
+  --color-accent-soft-ink: #7a2f12;
+  --radius-card: 1.75rem;
+  --shadow-card: 0 1px 2px rgb(92 52 30 / 0.05), 0 12px 28px -14px rgb(122 62 32 / 0.22);
+  --shadow-lift: 0 2px 4px rgb(92 52 30 / 0.06), 0 22px 40px -16px rgb(122 62 32 / 0.32);
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, "Times New Roman", serif;
+}
+html[data-layout="portrait"][data-theme="dark"],
+html[data-layout="portrait"][data-theme="dark"][data-accent] {
+  --color-page: #1d1511;
+  --color-card: #291e18;
+  --color-surface: #231a15;
+  --color-ink: #f8eee3;
+  --color-body: #e4d4c4;
+  --color-muted: #cbb7a4;
+  --color-subtle: #b29d8a;
+  --color-line: #3b2d24;
+  --color-line-strong: #55422f;
+  --color-control: #8f7863;
+  --color-accent: #b84d24;
+  --color-accent-strong: #9c3f1a;
+  --color-accent-ink: #f0895c;
+  --color-accent-soft: #3b2219;
+  --color-accent-soft-ink: #fbc9ae;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 30px -16px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 24px 44px -18px rgb(0 0 0 / 0.8);
+}
+
+/* ---------- page and lettering ---------- */
+html[data-layout="portrait"] body {
+  background: var(--color-page);
+  line-height: 1.7;
+}
+[data-layout="portrait"] .hero-name,
+[data-layout="portrait"] .section-title,
+[data-layout="portrait"] .kpi-value,
+[data-layout="portrait"] h3 {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+[data-layout="portrait"] .hero-name {
+  font-weight: 600;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+[data-layout="portrait"] .hero-greeting {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+}
+[data-layout="portrait"] .hero-role {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+[data-layout="portrait"] .section-title {
+  font-weight: 600;
+}
+[data-layout="portrait"] .eyebrow,
+[data-layout="portrait"] .mono-label {
+  font-family: var(--font-sans);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+[data-layout="portrait"] .mono-label {
+  color: var(--color-muted);
+}
+[data-layout="portrait"] .section-number {
+  display: none;
+}
+[data-layout="portrait"] .section-rule {
+  width: 2rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+
+/* ---------- top bar ---------- */
+[data-layout="portrait"] .top-bar {
+  background: color-mix(in oklab, var(--color-page) 88%, transparent);
+  border-bottom: 1px solid var(--color-line);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+[data-layout="portrait"] .top-bar-brand {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+}
+[data-layout="portrait"] .top-bar-logo {
+  border-radius: 9999px 9999px 0.5rem 0.5rem;
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* ---------- hero ---------- */
+[data-layout="portrait"] .portrait-hero {
+  background:
+    radial-gradient(60rem 28rem at 85% 0%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 70%),
+    var(--color-page);
+}
+[data-layout="portrait"] .portrait-photo {
+  position: relative;
+  isolation: isolate;
+}
+/* an offset terracotta arch peeking out behind the photo */
+[data-layout="portrait"] .portrait-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translate(0.9rem, 0.9rem);
+  border-radius: 9999px 9999px 1.5rem 1.5rem;
+  background: var(--color-accent-soft);
+  border: 2px solid var(--color-accent);
+}
+[data-layout="portrait"] .photo-frame[data-shape="arch"] .photo-clip {
+  border-radius: 9999px 9999px 1.5rem 1.5rem;
+  border: 6px solid var(--color-card);
+  box-shadow: var(--shadow-lift);
+}
+[data-layout="portrait"] .photo-monogram {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+[data-layout="portrait"] .hero-summary {
+  color: var(--color-body);
+}
+[data-layout="portrait"] .kicker,
+[data-layout="portrait"] .badge-ok {
+  border-radius: 9999px;
+}
+[data-layout="portrait"] .kicker {
+  font-family: var(--font-sans);
+  background: var(--color-accent-soft);
+  border-color: transparent;
+  color: var(--color-accent-soft-ink);
+}
+
+/* ---------- buttons and chips: soft pills ---------- */
+[data-layout="portrait"] .btn-primary,
+[data-layout="portrait"] .btn-secondary,
+[data-layout="portrait"] .btn-ghost {
+  border-radius: 9999px;
+}
+[data-layout="portrait"] .btn-primary {
+  padding-inline: 1.5rem;
+  box-shadow: 0 8px 18px -10px var(--color-accent);
+}
+[data-layout="portrait"] .btn-secondary {
+  background: var(--color-card);
+  border-color: var(--color-line-strong);
+}
+[data-layout="portrait"] .chip,
+[data-layout="portrait"] .tag,
+[data-layout="portrait"] .pill {
+  border-radius: 9999px;
+  background: var(--color-card);
+  border-color: var(--color-line-strong);
+  color: var(--color-muted);
+}
+[data-layout="portrait"] .tag:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+  border-color: var(--color-accent);
+}
+
+/* ---------- cards, tiles, facts ---------- */
+[data-layout="portrait"] .card,
+[data-layout="portrait"] .tile {
+  background: var(--color-card);
+  border-color: var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+[data-layout="portrait"] .tile {
+  padding: 1.5rem;
+  text-align: center;
+}
+[data-layout="portrait"] .kpi-bar {
+  left: 32%;
+  right: 32%;
+  top: 0.75rem;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+[data-layout="portrait"] .kpi-tile {
+  padding-top: 1.75rem;
+}
+[data-layout="portrait"] .kpi-value {
+  color: var(--color-accent-ink);
+  font-weight: 600;
+}
+[data-layout="portrait"] .facts-strip {
+  border-radius: var(--radius-card);
+  border-color: var(--color-line);
+  background: var(--color-line);
+}
+[data-layout="portrait"] .facts-item {
+  background: var(--color-card);
+}
+
+/* ---------- sections: airy, alternating warm bands with a soft curve ---------- */
+[data-layout="portrait"] .section-frame {
+  padding-block: clamp(3.5rem, 8vw, 7rem);
+}
+[data-layout="portrait"] .site-main > section:nth-of-type(even) {
+  background: var(--color-surface);
+  border-block: 0;
+  border-radius: clamp(1.5rem, 5vw, 4rem);
+  margin-inline: clamp(0rem, 1.5vw, 1.5rem);
+}
+[data-layout="portrait"] .section-head {
+  text-align: center;
+}
+[data-layout="portrait"] .section-head .eyebrow {
+  justify-content: center;
+}
+[data-layout="portrait"] .section-intro {
+  margin-inline: auto;
+}
+[data-layout="portrait"] .section-title::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 0.5rem;
+  margin: 0.9rem auto 0;
+  border-radius: 9999px 9999px 0 0;
+  background: var(--color-accent);
+  opacity: 0.85;
+}
+
+/* ---------- guards against overflow ---------- */
+[data-layout="portrait"] .site-main {
+  overflow-x: clip;
+}
+[data-layout="portrait"] .site-main img,
+[data-layout="portrait"] .site-main svg {
+  max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  [data-layout="portrait"] .portrait-photo::before {
+    transform: translate(0.5rem, 0.5rem);
+  }
+  [data-layout="portrait"] .hero-intro {
+    text-align: center;
+  }
+  [data-layout="portrait"] .hero-actions,
+  [data-layout="portrait"] .hero-profiles {
+    justify-content: center;
+  }
+  [data-layout="portrait"] .hero-summary {
+    margin-inline: auto;
+  }
+}
+@media (min-width: 1536px) {
+  [data-layout="portrait"] .portrait-photo {
+    max-width: 30rem;
+  }
+}
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-layout="portrait"] *,
+  [data-layout="portrait"] *::before,
+  [data-layout="portrait"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-motion="off"][data-layout="portrait"] *,
+html[data-motion="off"][data-layout="portrait"] *::before,
+html[data-motion="off"][data-layout="portrait"] *::after {
+  animation: none !important;
+  transition: none !important;
+}

@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Save, User, Plus, X, Edit, Trash2, MapPin, Award } from 'lucide-react';
-import { getPortfolioData, getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataForEditing, savePersonalPatch, updatePortfolioSection } from '@/lib/dataManager';
+import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { useDraftSync } from '@/lib/previewBus';
+import type { PersonalInfo, ProfileLink } from '@/lib/types';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
@@ -16,23 +19,36 @@ interface CurrentFocusItem {
   icon: string;
 }
 
+// The four quick facts with their own fields; any other fact is an "extra" the admin adds
+const STANDARD_FACTS = ['location', 'cgpa', 'graduation', 'scholarship'];
+
+const EMPTY_PERSONAL: Required<Omit<PersonalInfo, 'links' | 'photo'>> = {
+  name: '',
+  shortName: '',
+  title: '',
+  subtitle: '',
+  description: '',
+  about: '',
+  location: '',
+  email: '',
+  phone: '',
+  github: '',
+  linkedin: '',
+  cgpa: '',
+  graduation: '',
+};
+
+// The photo is edited in Admin > Profile photo, so it is not held in this form (saving here never touches it)
+function withoutPhoto(info: PersonalInfo): Partial<PersonalInfo> {
+  const rest: Partial<PersonalInfo> = { ...info };
+  delete rest.photo;
+  return rest;
+}
+
 export default function PersonalInfoAdmin() {
-  const [personalInfo, setPersonalInfo] = useState({
-    name: '',
-    shortName: '',
-    title: '',
-    subtitle: '',
-    description: '',
-    about: '',
-    location: '',
-    email: '',
-    phone: '',
-    github: '',
-    linkedin: '',
-    cgpa: '',
-    graduation: '',
-  });
-  const [quickFacts, setQuickFacts] = useState({
+  const [personalInfo, setPersonalInfo] = useState<Required<Omit<PersonalInfo, 'links' | 'photo'>>>(EMPTY_PERSONAL);
+  const [links, setLinks] = useState<ProfileLink[]>([]);
+  const [quickFacts, setQuickFacts] = useState<Record<string, string>>({
     location: '',
     cgpa: '',
     graduation: '',
@@ -49,42 +65,37 @@ export default function PersonalInfoAdmin() {
   });
   const [showAddForm, setShowAddForm] = useState(false);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // show unsaved edits in the live preview (with the saved photo, which is not edited on this page)
+  const [photo, setPhoto] = useState<PersonalInfo['photo']>(undefined);
+  const personalDraft = useMemo(() => ({ ...personalInfo, links, photo }), [personalInfo, links, photo]);
+  useDraftSync('personalInfo', personalDraft, !loading);
+  useDraftSync('quickFacts', quickFacts, !loading);
+  useDraftSync('currentFocus', currentFocus, !loading);
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('🔄 Loading portfolio data...');
-        const data = await getPortfolioData();
-        
-        if (data) {
-          setPersonalInfo(data.personalInfo);
-          setQuickFacts(data.quickFacts || {
-            location: '',
-            cgpa: '',
-            graduation: '',
-            scholarship: ''
-          });
-          setCurrentFocus(data.currentFocus || []);
-        }
-        console.log('✅ Portfolio data loaded successfully');
+        const data = await getPortfolioDataForEditing();
+        setPersonalInfo({ ...EMPTY_PERSONAL, ...withoutPhoto(data.personalInfo) });
+        setPhoto(data.personalInfo.photo);
+        setLinks(data.personalInfo.links ?? []);
+        setQuickFacts(data.quickFacts || {
+          location: '',
+          cgpa: '',
+          graduation: '',
+          scholarship: ''
+        });
+        setCurrentFocus(data.currentFocus || []);
       } catch (error) {
-        console.error('❌ Error loading portfolio data:', error);
-        // Fallback to sync version
-        const data = getPortfolioDataSync();
-        if (data) {
-          setPersonalInfo(data.personalInfo);
-          setQuickFacts(data.quickFacts || {
-            location: '',
-            cgpa: '',
-            graduation: '',
-            scholarship: ''
-          });
-          setCurrentFocus(data.currentFocus || []);
-        }
+        console.error('Failed to load saved content:', error);
+        setLoadError(error instanceof Error ? error.message : 'Could not load saved content.');
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
@@ -94,9 +105,17 @@ export default function PersonalInfoAdmin() {
     
     try {
       // Update all sections
-      await updatePortfolioSection('personalInfo', personalInfo);
-      await updatePortfolioSection('quickFacts', quickFacts);
-      await updatePortfolioSection('currentFocus', currentFocus);
+      const cleanLinks = links.map((link) => ({ label: link.label.trim(), url: link.url.trim() })).filter((link) => link.label && link.url);
+      const cleanFacts = Object.fromEntries(
+        Object.entries(quickFacts).filter(([key, text]) => STANDARD_FACTS.includes(key) || text.trim() !== '')
+      );
+      // each save reports whether it worked; nothing is announced as saved unless all three did
+      const savedPersonal = await savePersonalPatch({ ...personalInfo, links: cleanLinks });
+      const savedFacts = await updatePortfolioSection('quickFacts', cleanFacts);
+      const savedFocus = await updatePortfolioSection('currentFocus', currentFocus);
+      if (!savedPersonal || !savedFacts || !savedFocus) {
+        throw new Error('The database did not accept the changes');
+      }
       
       console.log('✅ Personal information saved successfully');
       
@@ -142,10 +161,12 @@ export default function PersonalInfoAdmin() {
   const syncFromCloud = async () => {
     try {
       setLoading(true);
-      const cloudData = await getPortfolioData();
+      const cloudData = await getPortfolioDataForEditing();
       
       if (cloudData) {
-        setPersonalInfo(cloudData.personalInfo);
+        setPersonalInfo({ ...EMPTY_PERSONAL, ...withoutPhoto(cloudData.personalInfo) });
+        setPhoto(cloudData.personalInfo.photo);
+        setLinks(cloudData.personalInfo.links ?? []);
         setQuickFacts(cloudData.quickFacts || {
           location: '',
           cgpa: '',
@@ -173,6 +194,14 @@ export default function PersonalInfoAdmin() {
     [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
     setCurrentFocus(updated);
   };
+
+  if (loadError) {
+    return (
+      <AdminLayout>
+        <AdminLoadError message={loadError} />
+      </AdminLayout>
+    );
+  }
 
   if (loading) {
     return (
@@ -374,6 +403,54 @@ export default function PersonalInfoAdmin() {
                 />
               </div>
             </div>
+
+            <div className="mt-6">
+              <p className={labelStyles}>Other profiles</p>
+              <p className="text-xs text-gray-500 mb-3">
+                Kaggle, Medium, LeetCode, Hugging Face, a personal blog... Each one appears next to GitHub and LinkedIn on your site, in the footer, the contact card and your saved contact.
+              </p>
+              <div className="space-y-3">
+                {links.map((link, index) => (
+                  <div key={index} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                    <input
+                      type="text"
+                      aria-label={`Profile ${index + 1} name`}
+                      value={link.label}
+                      maxLength={30}
+                      onChange={(e) => setLinks(links.map((item, i) => (i === index ? { ...item, label: e.target.value } : item)))}
+                      className={`${inputStyles} sm:w-44 sm:flex-none`}
+                      placeholder="Kaggle"
+                    />
+                    <input
+                      type="url"
+                      aria-label={`Profile ${index + 1} address`}
+                      value={link.url}
+                      onChange={(e) => setLinks(links.map((item, i) => (i === index ? { ...item, url: e.target.value } : item)))}
+                      className={inputStyles}
+                      placeholder="https://www.kaggle.com/username"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setLinks(links.filter((_, i) => i !== index))}
+                      className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                      title="Remove"
+                      aria-label={`Remove profile ${index + 1}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setLinks([...links, { label: '', url: '' }])}
+                  disabled={links.length >= 10}
+                  className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 text-sm font-medium disabled:opacity-50"
+                >
+                  <Plus size={16} />
+                  Add a profile
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Academic Information */}
@@ -450,6 +527,54 @@ export default function PersonalInfoAdmin() {
                   className={inputStyles}
                   placeholder="🏆 Reliance Foundation Scholar"
                 />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <p className={labelStyles}>More quick facts</p>
+              <div className="space-y-3">
+                {Object.entries(quickFacts)
+                  .filter(([key]) => !STANDARD_FACTS.includes(key))
+                  .map(([key, text]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        aria-label="Quick fact"
+                        value={text}
+                        maxLength={160}
+                        onChange={(e) => setQuickFacts((prev) => ({ ...prev, [key]: e.target.value }))}
+                        className={inputStyles}
+                        placeholder="🌐 Speaks English, Telugu and Hindi"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuickFacts((prev) => {
+                            const next = { ...prev };
+                            delete next[key];
+                            return next;
+                          })
+                        }
+                        className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                        title="Remove"
+                        aria-label="Remove this quick fact"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    let n = 1;
+                    while (`fact-${n}` in quickFacts) n++;
+                    setQuickFacts((prev) => ({ ...prev, [`fact-${n}`]: '' }));
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 text-sm font-medium"
+                >
+                  <Plus size={16} />
+                  Add a quick fact
+                </button>
               </div>
             </div>
           </div>
@@ -642,7 +767,7 @@ export default function PersonalInfoAdmin() {
               {currentFocus.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <Award className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p>No focus areas added yet. Click "Add Focus Area" to get started.</p>
+                  <p>No focus areas added yet. Click &quot;Add Focus Area&quot; to get started.</p>
                 </div>
               )}
             </div>

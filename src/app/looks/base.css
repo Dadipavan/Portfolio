@@ -1,0 +1,87 @@
+/* ------------------------------------------------------------------ */
+/* Shared by the newer looks                                            */
+/* Each look has its own file next to this one; this file holds what     */
+/* they share. Plain CSS: no Tailwind directives in these files.         */
+/* ------------------------------------------------------------------ */
+
+/* The profile photo. Every look chooses a shape (data-shape) and a size for the frame and adds its own border and
+   shadow; the clip cuts the picture to the shape. Without a photo the frame shows the initials instead. */
+.photo-frame {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+}
+.photo-clip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-surface);
+}
+.photo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.photo-monogram {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: 3rem;
+  font-size: 34cqi;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  color: var(--color-accent-soft-ink);
+  background: var(--color-accent-soft);
+}
+
+.photo-frame[data-shape="circle"] {
+  aspect-ratio: 1 / 1;
+}
+.photo-frame[data-shape="circle"] .photo-clip {
+  border-radius: 9999px;
+}
+.photo-frame[data-shape="arch"] {
+  aspect-ratio: 4 / 5;
+}
+.photo-frame[data-shape="arch"] .photo-clip {
+  border-radius: 9999px 9999px 1.25rem 1.25rem;
+}
+.photo-frame[data-shape="portrait"] {
+  aspect-ratio: 3 / 4;
+}
+.photo-frame[data-shape="portrait"] .photo-clip {
+  border-radius: var(--radius-card);
+}
+.photo-frame[data-shape="square"] {
+  aspect-ratio: 1 / 1;
+}
+.photo-frame[data-shape="square"] .photo-clip {
+  border-radius: 0.25rem;
+}
+.photo-frame[data-shape="oval"] {
+  aspect-ratio: 3 / 4;
+}
+.photo-frame[data-shape="oval"] .photo-clip {
+  border-radius: 50%;
+}
+/* a print-style photo: the look adds the white border and the tilt */
+.photo-frame[data-shape="polaroid"] {
+  aspect-ratio: 4 / 5;
+  display: flex;
+  flex-direction: column;
+}
+.photo-frame[data-shape="polaroid"] .photo-clip {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  border-radius: 0.125rem;
+}

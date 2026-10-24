@@ -1,66 +1,38 @@
-// Secure authentication utility for admin panel (client-side)
+// Client-side helpers for the admin panel.
+// The session itself lives in an httpOnly cookie set by /api/auth; the browser cannot read or forge it.
 
-export function isAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false;
-  const token = localStorage.getItem('admin_token');
-  if (!token) return false;
-  
-  try {
-    const data = JSON.parse(atob(token));
-    const expiry = new Date(data.expiry);
-    return expiry > new Date();
-  } catch {
-    return false;
-  }
-}
-
-export async function login(password: string): Promise<boolean> {
+export async function login(password: string): Promise<{ success: boolean; error?: string }> {
   try {
     const response = await fetch('/api/auth', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     });
-
-    const result = await response.json();
-    
-    if (result.success && result.token) {
-      localStorage.setItem('admin_token', result.token);
-      return true;
-    } else {
-      return false;
+    const result = await response.json().catch(() => ({}));
+    if (response.ok && result.success) {
+      return { success: true };
     }
-  } catch (error) {
-    console.error('Login error:', error);
+    return { success: false, error: result.error || 'Login failed' };
+  } catch {
+    return { success: false, error: 'Could not reach the server' };
+  }
+}
+
+export async function checkSession(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/auth', { cache: 'no-store' });
+    const result = await response.json();
+    return Boolean(result.authenticated);
+  } catch {
     return false;
   }
 }
 
-export function logout(): void {
-  localStorage.removeItem('admin_token');
-}
-
-export function requireAuth() {
-  if (!isAuthenticated()) {
-    window.location.href = '/admin/login';
-  }
-}
-
-// Get session info
-export function getSessionInfo(): { loginTime?: string; expiry?: string } | null {
-  if (typeof window === 'undefined') return null;
-  const token = localStorage.getItem('admin_token');
-  if (!token) return null;
-  
+export async function logout(): Promise<void> {
   try {
-    const data = JSON.parse(atob(token));
-    return {
-      loginTime: data.loginTime,
-      expiry: data.expiry
-    };
-  } catch {
-    return null;
+    await fetch('/api/auth', { method: 'DELETE' });
+  } finally {
+    // Remove the token left behind by the previous client-side login scheme
+    localStorage.removeItem('admin_token');
   }
 }

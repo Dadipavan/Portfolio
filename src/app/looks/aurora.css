@@ -1,0 +1,316 @@
+/* ------------------------------------------------------------------ */
+/* Look: aurora                                                         */
+/* Soft gradient light, frosted-glass panels, very round shapes and a    */
+/* floating dock at the bottom of the screen as the menu.                */
+/* data-layout sits on the SiteShell wrapper (and on <html> once the     */
+/* theme script has run), so these rules match both; data-theme is on    */
+/* <html>. The :not(#x) raises specificity above the accent rules.       */
+/* ------------------------------------------------------------------ */
+
+/* ---- Tokens: light (lavender paper, indigo ink) ---- */
+[data-layout="aurora"]:not(#x) {
+  --color-page: #f6f3ff;
+  --color-card: #ffffff;
+  --color-surface: #efeafe;
+  --color-ink: #1e1b3a;
+  --color-body: #38355a;
+  --color-muted: #504d78;
+  --color-subtle: #4f4c80;
+  --color-line: #ddd6f7;
+  --color-line-strong: #c4bbee;
+  --color-control: #7d78b0;
+
+  --color-accent: #5b3fd1;
+  --color-accent-strong: #4529b3;
+  --color-accent-ink: #5b3fd1;
+  --color-accent-soft: #ece8ff;
+  --color-accent-soft-ink: #3b2a99;
+
+  --font-display: var(--font-outfit), var(--font-sans);
+  --radius-card: 1.75rem;
+  --shadow-card: 0 1px 2px rgb(60 40 140 / 0.06), 0 14px 40px -18px rgb(70 50 170 / 0.28);
+  --shadow-lift: 0 2px 6px rgb(60 40 140 / 0.08), 0 24px 50px -18px rgb(70 50 170 / 0.38);
+
+  --aurora-glass: rgb(255 255 255 / 0.72);
+  --aurora-glass-line: rgb(255 255 255 / 0.9);
+  --aurora-blob-a: #d9ccff;
+  --aurora-blob-b: #bff3e3;
+  --aurora-blob-c: #ffd9c7;
+  --aurora-btn-ink: #ffffff;
+}
+
+/* ---- Tokens: dark (deep indigo, glowing panels) ---- */
+html[data-theme="dark"] [data-layout="aurora"]:not(#x),
+html[data-theme="dark"][data-layout="aurora"]:not(#x) {
+  --color-page: #0f0c26;
+  --color-card: #1a1640;
+  --color-surface: #14102f;
+  --color-ink: #f3f1ff;
+  --color-body: #d4d0f5;
+  --color-muted: #b4b0e0;
+  --color-subtle: #b0acdc;
+  --color-line: #2e2966;
+  --color-line-strong: #433d8a;
+  --color-control: #7a76b8;
+
+  --color-accent: #6b4df0;
+  --color-accent-strong: #5738d8;
+  --color-accent-ink: #b9a8ff;
+  --color-accent-soft: #251f5c;
+  --color-accent-soft-ink: #d8ceff;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 44px -18px rgb(110 80 255 / 0.35);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.5), 0 26px 54px -18px rgb(120 90 255 / 0.5);
+
+  --aurora-glass: rgb(26 22 64 / 0.72);
+  --aurora-glass-line: rgb(150 130 255 / 0.28);
+  --aurora-blob-a: #3b2a9e;
+  --aurora-blob-b: #0f5c5c;
+  --aurora-blob-c: #6a2a62;
+}
+
+/* ---- Page: a gradient wash with three blurred colour blobs ---- */
+[data-layout="aurora"] {
+  position: relative;
+  background: var(--color-page);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  overflow-x: clip;
+}
+html[data-layout="aurora"] body,
+body:has([data-layout="aurora"]) {
+  background: var(--color-page);
+}
+[data-layout="aurora"] .aurora-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(40rem 32rem at 12% 8%, var(--aurora-blob-a), transparent 70%),
+    radial-gradient(36rem 30rem at 92% 22%, var(--aurora-blob-b), transparent 70%),
+    radial-gradient(42rem 34rem at 55% 100%, var(--aurora-blob-c), transparent 70%);
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="off"]) [data-layout="aurora"] .aurora-backdrop {
+    animation: aurora-drift 28s ease-in-out infinite alternate;
+  }
+}
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-2%, 3%, 0) scale(1.06);
+  }
+}
+[data-layout="aurora"] .site-main,
+[data-layout="aurora"] footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Header ---- */
+[data-layout="aurora"] .aurora-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--aurora-glass);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--aurora-glass-line);
+}
+[data-layout="aurora"] .aurora-brand {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* ---- Hero ---- */
+[data-layout="aurora"] .aurora-hero {
+  position: relative;
+}
+[data-layout="aurora"] .aurora-photo {
+  max-width: 11rem;
+  padding: 0.4rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--color-accent-ink), #f472b6);
+  box-shadow: var(--shadow-lift);
+}
+@media (min-width: 640px) {
+  [data-layout="aurora"] .aurora-photo {
+    max-width: 13rem;
+  }
+}
+[data-layout="aurora"] .aurora-photo .photo-clip {
+  border: 3px solid var(--color-card);
+}
+[data-layout="aurora"] .gradient-text {
+  background-image: linear-gradient(100deg, var(--color-accent-ink), #db2777 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html[data-theme="dark"] [data-layout="aurora"] .gradient-text {
+  background-image: linear-gradient(100deg, #b9a8ff, #ff9ad5 70%);
+}
+[data-layout="aurora"] h1,
+[data-layout="aurora"] h2,
+[data-layout="aurora"] h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+/* ---- Frosted panels: every section body, card and tile ---- */
+[data-layout="aurora"] .site-main > section:nth-of-type(even) {
+  background: transparent;
+}
+[data-layout="aurora"] .section-wrap {
+  background: var(--aurora-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid var(--aurora-glass-line);
+  border-radius: 2rem;
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem 1.25rem;
+  max-width: min(72rem, calc(100% - 1.5rem));
+}
+@media (min-width: 640px) {
+  [data-layout="aurora"] .section-wrap {
+    padding: 2.5rem 2.25rem;
+  }
+}
+[data-layout="aurora"] .section-frame {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+[data-layout="aurora"] .card,
+[data-layout="aurora"] .tile {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
+}
+[data-layout="aurora"] .chip,
+[data-layout="aurora"] .tag {
+  border-radius: 9999px;
+}
+[data-layout="aurora"] .section-eyebrow,
+[data-layout="aurora"] .section-label {
+  color: var(--color-accent-ink);
+}
+[data-layout="aurora"] a {
+  text-underline-offset: 3px;
+}
+
+/* ---- Buttons and fields: pill shaped ---- */
+[data-layout="aurora"] button,
+[data-layout="aurora"] .btn,
+[data-layout="aurora"] input,
+[data-layout="aurora"] textarea,
+[data-layout="aurora"] select {
+  border-radius: 9999px;
+}
+[data-layout="aurora"] textarea {
+  border-radius: 1.25rem;
+}
+[data-layout="aurora"] .bg-accent {
+  background: linear-gradient(120deg, var(--color-accent), var(--color-accent-strong));
+  color: var(--aurora-btn-ink);
+}
+[data-layout="aurora"] :focus-visible {
+  outline: 3px solid var(--color-accent-ink);
+  outline-offset: 3px;
+}
+
+/* ---- The dock: floating glass pill at the bottom ---- */
+[data-layout="aurora"] .dock-wrap {
+  z-index: 50;
+}
+[data-layout="aurora"] .dock,
+[data-layout="aurora"] .dock-sheet {
+  background: var(--aurora-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid var(--aurora-glass-line);
+  box-shadow: var(--shadow-lift);
+}
+[data-layout="aurora"] .dock {
+  border-radius: 9999px;
+  padding: 0.35rem;
+  max-width: calc(100vw - 1.5rem);
+}
+[data-layout="aurora"] .dock-sheet {
+  border-radius: 1.75rem;
+  padding: 0.75rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+[data-layout="aurora"] .dock-list {
+  max-width: 100%;
+}
+[data-layout="aurora"] .dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 3.25rem;
+  min-height: 3rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 9999px;
+  color: var(--color-muted);
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+[data-layout="aurora"] .dock-item:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+[data-layout="aurora"] .dock-item[aria-current="true"],
+[data-layout="aurora"] .dock-item[aria-current="page"],
+[data-layout="aurora"] .dock-item[data-active="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+[data-layout="aurora"] .dock-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  [data-layout="aurora"] .dock-item {
+    min-width: 2.75rem;
+    padding: 0.35rem 0.4rem;
+  }
+}
+
+/* ---- Footer ---- */
+[data-layout="aurora"] footer {
+  background: transparent;
+  border-top: 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* ---- Motion ---- */
+html[data-motion="off"] [data-layout="aurora"] .aurora-backdrop {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-layout="aurora"] .aurora-backdrop,
+  [data-layout="aurora"] .dock-item {
+    animation: none;
+    transition: none;
+  }
+}

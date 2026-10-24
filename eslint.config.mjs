@@ -12,12 +12,21 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // Existing code still contains `any`; new code should use real types.
+    // Reported as warnings so they stay visible without blocking builds.
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "scripts/**",
+      "setup-vercel-env.js",
     ],
   },
 ];

@@ -1,161 +1,131 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseServer'
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseServer';
+import { revalidatePath } from 'next/cache';
+import { isAdminRequest, requireAdmin } from '@/lib/server/session';
+import { toPublicResumes } from '@/lib/server/portfolio';
+import {
+  PORTFOLIO_SECTIONS,
+  PORTFOLIO_TABLE,
+  isPortfolioSection,
+  isValidSectionPayload,
+} from '@/lib/server/sections';
 
-// Portfolio data table name
-const PORTFOLIO_TABLE = 'portfolio_data'
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log('� Fetching portfolio data from database...')
-    
-    // Fetch all portfolio data sections
     const { data: portfolioSections, error } = await supabaseAdmin
       .from(PORTFOLIO_TABLE)
       .select('section, data, updated_at')
-      .order('section')
+      .order('section');
 
     if (error) {
-      console.error('❌ Database error:', error)
+      console.error('Database error fetching portfolio data:', error.message);
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch portfolio data', details: error.message },
+        { success: false, error: 'Failed to fetch portfolio data' },
         { status: 500 }
-      )
+      );
     }
 
     if (!portfolioSections || portfolioSections.length === 0) {
-      console.log('⚠️ No portfolio data found in database')
       return NextResponse.json(
         { success: false, error: 'No portfolio data found' },
         { status: 404 }
-      )
+      );
     }
 
-    // Transform the data into the expected format
-    const portfolioData: any = {
-      resumes: [], // Initialize as empty array
-      lastUpdated: new Date().toISOString()
-    }
+    const isAdmin = isAdminRequest(request);
+    const portfolioData: Record<string, unknown> = { resumes: [] };
 
-    portfolioSections.forEach(section => {
+    portfolioSections.forEach((section) => {
       if (section.section === 'resumes') {
-        // Ensure resumes is always an array
-        portfolioData[section.section] = Array.isArray(section.data) ? section.data : []
+        const resumes = Array.isArray(section.data) ? section.data : [];
+        portfolioData.resumes = isAdmin ? resumes : toPublicResumes(resumes);
       } else {
-        portfolioData[section.section] = section.data
+        portfolioData[section.section] = section.data;
       }
-    })
+    });
 
-    // Get the latest update timestamp
-    const latestUpdate = portfolioSections.reduce((latest, section) => {
-      const sectionTime = new Date(section.updated_at).getTime()
-      return sectionTime > new Date(latest).getTime() ? section.updated_at : latest
-    }, portfolioSections[0].updated_at)
+    portfolioData.lastUpdated = portfolioSections.reduce(
+      (latest, section) =>
+        new Date(section.updated_at).getTime() > new Date(latest).getTime()
+          ? section.updated_at
+          : latest,
+      portfolioSections[0].updated_at
+    );
 
-    portfolioData.lastUpdated = latestUpdate
-
-    console.log('✅ Portfolio data fetched successfully:', Object.keys(portfolioData))
-    
-    return NextResponse.json({
-      success: true,
-      data: portfolioData
-    })
+    return NextResponse.json(
+      { success: true, data: portfolioData },
+      { headers: { 'Cache-Control': 'private, no-store' } }
+    );
   } catch (err) {
-    console.error('💥 Get portfolio data failed:', err)
-    return NextResponse.json({ 
-      success: false, 
-      error: err instanceof Error ? err.message : 'Get failed' 
-    }, { status: 500 })
+    console.error('Get portfolio data failed:', err);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch portfolio data' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
   try {
-    const body = await request.json()
-    console.log('🔄 Updating portfolio data in database...')
+    const body = await request.json();
+    const { data, section } = body ?? {};
 
-    if (!body.data) {
-      return NextResponse.json(
-        { success: false, error: 'No data provided' },
-        { status: 400 }
-      )
-    }
-
-    const { data } = body
-
-    // If updating a specific section
-    if (body.section) {
-      const { section } = body
-      console.log(`🔄 Updating section: ${section}`)
+    // Update one section
+    if (section !== undefined) {
+      if (!isPortfolioSection(section) || !isValidSectionPayload(data)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid section or data' },
+          { status: 400 }
+        );
+      }
 
       const { error } = await supabaseAdmin
         .from(PORTFOLIO_TABLE)
-        .upsert({
-          section,
-          data,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'section'
-        })
+        .upsert({ section, data, updated_at: new Date().toISOString() }, { onConflict: 'section' });
 
       if (error) {
-        console.error('❌ Database error updating section:', error)
+        console.error('Database error updating section:', error.message);
         return NextResponse.json(
-          { success: false, error: 'Failed to update portfolio section', details: error.message },
+          { success: false, error: 'Failed to update portfolio section' },
           { status: 500 }
-        )
+        );
       }
-
-      console.log(`✅ Section ${section} updated successfully`)
-      return NextResponse.json({ success: true })
+      revalidatePath('/');
+      return NextResponse.json({ success: true });
     }
 
-    // If updating all data at once
-    const updates = []
-    const sectionsToUpdate = [
-      'personalInfo',
-      'technicalSkills', 
-      'projects',
-      'experience',
-      'education',
-      'certifications',
-      'achievements',
-      'quickFacts',
-      'currentFocus'
-    ]
-
-    for (const section of sectionsToUpdate) {
-      if (data[section]) {
-        updates.push({
-          section,
-          data: data[section],
-          updated_at: new Date().toISOString()
-        })
-      }
+    // Update several sections at once (resumes are managed only by the resume routes)
+    if (data === null || typeof data !== 'object') {
+      return NextResponse.json({ success: false, error: 'No data provided' }, { status: 400 });
     }
+
+    const updates = PORTFOLIO_SECTIONS.filter(
+      (name) => name !== 'resumes' && data[name] !== undefined
+    )
+      .filter((name) => isValidSectionPayload(data[name]))
+      .map((name) => ({ section: name, data: data[name], updated_at: new Date().toISOString() }));
 
     if (updates.length > 0) {
       const { error } = await supabaseAdmin
         .from(PORTFOLIO_TABLE)
-        .upsert(updates, {
-          onConflict: 'section'
-        })
+        .upsert(updates, { onConflict: 'section' });
 
       if (error) {
-        console.error('❌ Database error updating portfolio data:', error)
+        console.error('Database error updating portfolio data:', error.message);
         return NextResponse.json(
-          { success: false, error: 'Failed to update portfolio data', details: error.message },
+          { success: false, error: 'Failed to update portfolio data' },
           { status: 500 }
-        )
+        );
       }
     }
 
-    console.log('✅ Portfolio data updated successfully')
-    return NextResponse.json({ success: true })
+    revalidatePath('/');
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('💥 Save portfolio data failed:', err)
-    return NextResponse.json({ 
-      success: false, 
-      error: err instanceof Error ? err.message : 'Save failed' 
-    }, { status: 500 })
+    console.error('Save portfolio data failed:', err);
+    return NextResponse.json({ success: false, error: 'Save failed' }, { status: 500 });
   }
 }

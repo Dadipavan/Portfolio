@@ -1,0 +1,558 @@
+/* ------------------------------------------------------------------ */
+/* Look: notebook                                                       */
+/* Ruled pages with a red margin, a handwritten accent font, a taped     */
+/* polaroid, sticky-note numbers and index-card tabs. Every selector is  */
+/* scoped under html[data-layout="notebook"]. Plain CSS.                 */
+/* ------------------------------------------------------------------ */
+
+/* ---------- Tokens (light: cream paper on a warm desk) ---------- */
+html[data-layout="notebook"][data-layout="notebook"]:root {
+  --color-page: #efe8d6;
+  --color-card: #fffdf5;
+  --color-surface: #f6f0de;
+  --color-ink: #1f2a44;
+  --color-body: #2f3a52;
+  --color-muted: #46506a;
+  --color-subtle: #58534a;
+  --color-line: #ddd3b8;
+  --color-line-strong: #c4b896;
+  --color-control: #7d725a;
+  /* pen blue */
+  --color-accent: #24498f;
+  --color-accent-strong: #17316a;
+  --color-accent-ink: #24498f;
+  --color-accent-soft: #e6ecf7;
+  --color-accent-soft-ink: #17316a;
+  --radius-card: 4px;
+  --shadow-card: 1px 2px 0 rgb(80 60 20 / 0.12), 3px 6px 14px -6px rgb(80 60 20 / 0.25);
+  --shadow-lift: 2px 4px 0 rgb(80 60 20 / 0.14), 6px 14px 22px -8px rgb(80 60 20 / 0.32);
+
+  --nb-hand: var(--font-caveat), "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  --nb-rule: #c9d9e8; /* blue ruled lines */
+  --nb-margin: #d9534f; /* red margin line (decorative) */
+  --nb-red-ink: #a3231b; /* red used for text */
+  --nb-tape: rgb(238 214 120 / 0.78);
+  --nb-hole-ring: rgb(60 40 10 / 0.22);
+  --nb-note-yellow: #fff2a6;
+  --nb-note-pink: #ffd1dc;
+  --nb-note-mint: #c8f0d8;
+  --nb-note-ink: #2b2b2b; /* sticky notes stay light in both themes */
+  --nb-note-label: #3b3522;
+  --nb-print: #fffdf8; /* polaroid border */
+  --nb-gutter: 3.25rem; /* space left of the text for the margin line */
+  --nb-margin-x: 2.25rem;
+}
+
+/* ---------- Tokens (dark: chalkboard green, cream ink) ---------- */
+html[data-layout="notebook"][data-layout="notebook"][data-theme="dark"]:root {
+  --color-page: #16231e;
+  --color-card: #22342c;
+  --color-surface: #1b2b24;
+  --color-ink: #f7f1de;
+  --color-body: #e6dfca;
+  --color-muted: #c9c4ae;
+  --color-subtle: #aeb8a8;
+  --color-line: #36503f;
+  --color-line-strong: #4d6a5a;
+  --color-control: #7f9588;
+  /* chalk yellow as the highlight, green as the fill */
+  --color-accent: #2f7d5b;
+  --color-accent-strong: #236449;
+  --color-accent-ink: #f2cf75;
+  --color-accent-soft: #2c4339;
+  --color-accent-soft-ink: #f4e7b5;
+  --shadow-card: 1px 2px 0 rgb(0 0 0 / 0.35), 3px 8px 16px -8px rgb(0 0 0 / 0.6);
+  --shadow-lift: 2px 4px 0 rgb(0 0 0 / 0.4), 6px 16px 24px -10px rgb(0 0 0 / 0.7);
+  --nb-rule: #2f473b;
+  --nb-margin: #e0766e;
+  --nb-red-ink: #ff9d92;
+  --nb-tape: rgb(235 215 140 / 0.72);
+  --nb-hole-ring: rgb(0 0 0 / 0.45);
+}
+
+/* ---------- The desk ---------- */
+html[data-layout="notebook"] body {
+  background-color: var(--color-page);
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-line-strong) 30%, transparent) 1px,
+    transparent 1.3px
+  );
+  background-size: 20px 20px;
+}
+html[data-layout="notebook"] .site-main > section:nth-of-type(even) {
+  background: transparent;
+  border-block: 0;
+}
+
+/* ---------- Handwritten accents ---------- */
+html[data-layout="notebook"] .mono-label,
+html[data-layout="notebook"] .eyebrow,
+html[data-layout="notebook"] .hero-greeting,
+html[data-layout="notebook"] .hero-role,
+html[data-layout="notebook"] .tabs-brand,
+html[data-layout="notebook"] .tabs-tab,
+html[data-layout="notebook"] .section-title {
+  font-family: var(--nb-hand);
+}
+html[data-layout="notebook"] .mono-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  line-height: 1.2;
+}
+html[data-layout="notebook"] .eyebrow {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  line-height: 1.1;
+}
+html[data-layout="notebook"] .section-number {
+  color: var(--nb-red-ink);
+}
+html[data-layout="notebook"] .section-rule {
+  height: 2px;
+  background: var(--nb-margin);
+  border-radius: 2px;
+}
+html[data-layout="notebook"] .hero-greeting {
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+html[data-layout="notebook"] .hero-name {
+  font-family: var(--nb-hand);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+html[data-layout="notebook"] .hero-role {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: underline wavy var(--nb-margin) 2px;
+  text-underline-offset: 0.3em;
+  text-decoration-skip-ink: none;
+}
+html[data-layout="notebook"] .section-title {
+  font-weight: 700;
+  letter-spacing: 0;
+  font-size: 2.5rem;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 640px) {
+  html[data-layout="notebook"] .section-title {
+    font-size: 3.1rem;
+  }
+}
+
+/* ---------- Page-like panels: ruled lines + red margin ---------- */
+html[data-layout="notebook"] .notebook-hero,
+html[data-layout="notebook"] .section-frame {
+  overflow-x: clip;
+  padding-inline: 0.75rem;
+}
+html[data-layout="notebook"] .notebook-hero > .container-page {
+  padding-inline: 0;
+}
+html[data-layout="notebook"] .section-frame {
+  padding-block: 1.25rem;
+}
+@media (min-width: 640px) {
+  html[data-layout="notebook"] .section-frame {
+    padding-block: 1.75rem;
+  }
+}
+
+html[data-layout="notebook"] .notebook-page,
+html[data-layout="notebook"] .section-wrap {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-card);
+  background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--nb-rule) 0);
+  background-size: 100% 1.75rem;
+  background-position: 0 0.75rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 3px 6px 6px 3px;
+  box-shadow:
+    0 1px 0 var(--color-card),
+    0 3px 0 -1px var(--color-line),
+    0 4px 0 -1px var(--color-line-strong),
+    4px 10px 26px -10px rgb(60 40 10 / 0.35);
+  padding: 1.75rem 1rem 1.75rem var(--nb-gutter);
+}
+html[data-layout="notebook"][data-theme="dark"] .notebook-page,
+html[data-layout="notebook"][data-theme="dark"] .section-wrap {
+  box-shadow:
+    0 1px 0 var(--color-card),
+    0 3px 0 -1px var(--color-line),
+    0 4px 0 -1px var(--color-line-strong),
+    4px 10px 26px -10px rgb(0 0 0 / 0.7);
+}
+/* the double red margin line */
+html[data-layout="notebook"] .notebook-page::before,
+html[data-layout="notebook"] .section-wrap::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: var(--nb-margin-x);
+  width: 5px;
+  border-inline: 1px solid var(--nb-margin);
+  pointer-events: none;
+}
+/* binder holes */
+html[data-layout="notebook"] .notebook-page::after,
+html[data-layout="notebook"] .section-wrap::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 0.35rem;
+  width: 1.1rem;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    var(--color-page) 0 0.36rem,
+    var(--nb-hole-ring) 0.38rem 0.46rem,
+    transparent 0.5rem
+  );
+  background-size: 100% 9rem;
+  background-position: 0 1.5rem;
+  background-repeat: repeat-y;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  html[data-layout="notebook"] {
+    --nb-gutter: 5rem;
+    --nb-margin-x: 3.5rem;
+  }
+  html[data-layout="notebook"] .notebook-page,
+  html[data-layout="notebook"] .section-wrap {
+    padding: 2.5rem 2.25rem 2.5rem var(--nb-gutter);
+  }
+  html[data-layout="notebook"] .notebook-page::after,
+  html[data-layout="notebook"] .section-wrap::after {
+    left: 0.9rem;
+  }
+}
+/* keep the container's own max width and centring; the padding above replaces its side padding */
+html[data-layout="notebook"] .section-wrap {
+  margin-inline: auto;
+}
+
+/* the hero page needs the two-column grid to keep clear of the margin */
+html[data-layout="notebook"] .notebook-text {
+  min-width: 0;
+}
+
+/* ---------- Photo: taped polaroid ---------- */
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"] {
+  padding: 0.6rem 0.6rem 2.6rem;
+  background: var(--nb-print);
+  border: 1px solid rgb(80 60 20 / 0.18);
+  border-radius: 2px;
+  box-shadow: 0 2px 3px rgb(60 40 10 / 0.2), 0 14px 22px -10px rgb(60 40 10 / 0.45);
+  transform: rotate(-3deg);
+  transform-origin: 50% 40%;
+}
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"] .photo-clip {
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"]::before,
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"]::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  width: 4.6rem;
+  height: 1.5rem;
+  background: var(--nb-tape);
+  box-shadow: 0 1px 2px rgb(60 40 10 / 0.18);
+  /* torn tape edges */
+  clip-path: polygon(0 8%, 4% 0, 8% 10%, 12% 0, 100% 0, 96% 25%, 100% 50%, 96% 75%, 100% 100%, 8% 100%, 4% 88%, 0 100%, 3% 50%);
+  pointer-events: none;
+}
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"]::before {
+  top: -0.7rem;
+  left: -1.2rem;
+  transform: rotate(-38deg);
+}
+html[data-layout="notebook"] .photo-frame[data-shape="polaroid"]::after {
+  top: -0.7rem;
+  right: -1.2rem;
+  transform: rotate(38deg);
+}
+html[data-layout="notebook"] .notebook-photo {
+  padding-top: 0.5rem;
+}
+@media (min-width: 1024px) {
+  html[data-layout="notebook"] .photo-frame[data-shape="polaroid"] {
+    transform: rotate(2.5deg);
+  }
+}
+
+/* ---------- KPI numbers: sticky notes ---------- */
+html[data-layout="notebook"] .kpi-tiles {
+  gap: 1.1rem;
+  padding: 0.5rem 0.4rem;
+}
+html[data-layout="notebook"] .kpi-tile.tile {
+  position: relative;
+  overflow: visible;
+  min-width: 0;
+  padding: 1.6rem 1rem 1.1rem;
+  border: 0;
+  border-radius: 1px 1px 12px 1px;
+  background:
+    linear-gradient(135deg, transparent 88%, rgb(0 0 0 / 0.1) 0),
+    var(--nb-note-yellow);
+  color: var(--nb-note-ink);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.15), 0 12px 14px -8px rgb(0 0 0 / 0.4);
+  transform: rotate(-2deg);
+}
+html[data-layout="notebook"] .kpi-tile:nth-child(3n + 2) {
+  background:
+    linear-gradient(135deg, transparent 88%, rgb(0 0 0 / 0.1) 0),
+    var(--nb-note-pink);
+  transform: rotate(1.6deg);
+}
+html[data-layout="notebook"] .kpi-tile:nth-child(3n + 3) {
+  background:
+    linear-gradient(135deg, transparent 88%, rgb(0 0 0 / 0.1) 0),
+    var(--nb-note-mint);
+  transform: rotate(-1deg);
+}
+html[data-layout="notebook"] .kpi-tile:nth-child(4n + 4) {
+  transform: rotate(2.3deg);
+}
+/* a strip of tape on top of each note */
+html[data-layout="notebook"] .kpi-tile::before {
+  content: "";
+  position: absolute;
+  top: -0.55rem;
+  left: 50%;
+  width: 3.4rem;
+  height: 1.1rem;
+  margin-left: -1.7rem;
+  background: rgb(255 255 255 / 0.55);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+html[data-layout="notebook"] .kpi-tile .kpi-bar {
+  display: none;
+}
+html[data-layout="notebook"] .kpi-tile .kpi-value {
+  font-family: var(--nb-hand);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--nb-note-ink);
+  overflow-wrap: anywhere;
+}
+html[data-layout="notebook"] .kpi-tile .kpi-label {
+  margin-top: 0.4rem;
+  color: var(--nb-note-label);
+  font-family: var(--nb-hand);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0;
+  text-transform: none;
+}
+@media (min-width: 640px) {
+  html[data-layout="notebook"] .kpi-tile .kpi-value {
+    font-size: 3.6rem;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  html[data-layout="notebook"] .kpi-tile .kpi-value {
+    font-size: 3rem;
+  }
+}
+
+/* ---------- Facts strip: index cards ---------- */
+html[data-layout="notebook"] .facts-strip {
+  gap: 0.9rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-layout="notebook"] .facts-item {
+  position: relative;
+  min-width: min(13rem, 100%);
+  padding: 1.1rem 1.1rem 1rem;
+  border: 1px solid var(--color-line-strong);
+  border-top: 3px solid var(--nb-margin);
+  border-radius: 2px;
+  background-color: var(--color-card);
+  background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--nb-rule) 0);
+  background-size: 100% 1.5rem;
+  background-position: 0 1.6rem;
+  box-shadow: var(--shadow-card);
+}
+html[data-layout="notebook"] .facts-item:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+html[data-layout="notebook"] .facts-item:nth-child(odd) {
+  transform: rotate(-0.4deg);
+}
+
+/* ---------- Cards, tags, buttons: paper pieces ---------- */
+html[data-layout="notebook"] .site-main .card,
+html[data-layout="notebook"] .site-main .tile:not(.kpi-tile) {
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+html[data-layout="notebook"] .chip,
+html[data-layout="notebook"] .tag,
+html[data-layout="notebook"] .pill,
+html[data-layout="notebook"] .kicker {
+  border-style: dashed;
+  border-color: var(--color-line-strong);
+  border-radius: 6px;
+}
+html[data-layout="notebook"] .pill[aria-pressed="true"],
+html[data-layout="notebook"] .pill[aria-selected="true"],
+html[data-layout="notebook"] .pill[data-active="true"] {
+  border-style: solid;
+}
+html[data-layout="notebook"] .btn-primary,
+html[data-layout="notebook"] .btn-secondary {
+  border: 2px solid var(--color-ink);
+  border-radius: 7px 10px 6px 11px / 10px 6px 11px 7px;
+  box-shadow: 2px 3px 0 var(--color-ink);
+  font-weight: 700;
+}
+html[data-layout="notebook"] .btn-primary {
+  color: #fff;
+}
+html[data-layout="notebook"] .btn-secondary {
+  background: var(--color-card);
+  color: var(--color-ink);
+}
+html[data-layout="notebook"] .btn-secondary:hover {
+  background: var(--color-surface);
+}
+html[data-layout="notebook"] .btn-ghost {
+  text-decoration: underline dotted 2px;
+  text-underline-offset: 4px;
+}
+html[data-layout="notebook"] .field {
+  border-radius: 4px;
+  background: var(--color-card);
+}
+html[data-layout="notebook"] footer {
+  border-top: 2px dashed var(--color-line-strong);
+  background: transparent;
+}
+
+/* ---------- Index-card tab menu ---------- */
+html[data-layout="notebook"] .tabs-nav[data-tone="notebook"] {
+  background: var(--color-page);
+  border-bottom: 2px solid var(--color-line-strong);
+  box-shadow: 0 6px 12px -10px rgb(60 40 10 / 0.5);
+}
+html[data-layout="notebook"] .tabs-nav[data-tone="notebook"] .tabs-bar {
+  background: transparent;
+}
+html[data-layout="notebook"] .tabs-brand {
+  color: var(--color-ink);
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+}
+html[data-layout="notebook"] .tabs-list {
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding: 6px 6px 0;
+}
+html[data-layout="notebook"] .tabs-list > li {
+  --tab-c: var(--nb-note-yellow);
+}
+html[data-layout="notebook"] .tabs-list > li:nth-child(3n + 2) {
+  --tab-c: var(--nb-note-pink);
+}
+html[data-layout="notebook"] .tabs-list > li:nth-child(3n + 3) {
+  --tab-c: var(--nb-note-mint);
+}
+html[data-layout="notebook"] .tabs-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.95rem 0.2rem;
+  border: 1.5px solid var(--color-line-strong);
+  border-top: 5px solid var(--tab-c);
+  border-bottom: 0;
+  border-radius: 7px 7px 2px 2px;
+  background: var(--color-card);
+  color: var(--color-body);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+html[data-layout="notebook"] .tabs-tab:hover {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+html[data-layout="notebook"] .tabs-tab[aria-current="true"] {
+  background: var(--tab-c);
+  border-color: var(--color-line-strong);
+  border-top-color: var(--nb-margin);
+  color: var(--nb-note-ink);
+  min-height: 2.9rem;
+}
+
+/* ---------- Motion ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-layout="notebook"] .kpi-tile.tile,
+  html[data-layout="notebook"] .facts-item,
+  html[data-layout="notebook"] .photo-frame[data-shape="polaroid"],
+  html[data-layout="notebook"] .tabs-tab {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.2s ease;
+  }
+  html[data-layout="notebook"] .kpi-tile.tile:hover {
+    transform: rotate(0deg) translateY(-3px) scale(1.03);
+  }
+  html[data-layout="notebook"] .photo-frame[data-shape="polaroid"]:hover {
+    transform: rotate(0deg);
+  }
+  html[data-layout="notebook"] .btn-primary:hover,
+  html[data-layout="notebook"] .btn-secondary:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 2px 0 var(--color-ink);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-layout="notebook"] .kpi-tile.tile,
+  html[data-layout="notebook"] .facts-item,
+  html[data-layout="notebook"] .photo-frame[data-shape="polaroid"] {
+    transition: none;
+  }
+}
+html[data-layout="notebook"][data-motion="off"] .kpi-tile.tile,
+html[data-layout="notebook"][data-motion="off"] .photo-frame[data-shape="polaroid"] {
+  transition: none;
+}
+
+@media print {
+  html[data-layout="notebook"] .notebook-page::before,
+  html[data-layout="notebook"] .notebook-page::after,
+  html[data-layout="notebook"] .section-wrap::before,
+  html[data-layout="notebook"] .section-wrap::after {
+    display: none;
+  }
+}

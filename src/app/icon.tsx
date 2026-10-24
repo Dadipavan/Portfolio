@@ -1,23 +1,34 @@
-import { ImageResponse } from 'next/og'
- 
-// Route segment config
-export const runtime = 'edge'
- 
-// Image metadata
+import { ImageResponse } from 'next/og';
+import { getPublicPortfolio } from '@/lib/server/portfolio';
+import { ACCENTS } from '@/lib/siteSettings';
+
 export const size = {
   width: 32,
   height: 32,
-}
-export const contentType = 'image/png'
- 
-// Image generation
-export default function Icon() {
+};
+export const contentType = 'image/png';
+
+// Regenerate hourly so a changed name or accent colour shows up in the browser tab
+export const revalidate = 3600;
+
+// The initials of the short name on the accent colour (for example "SP" for "Sai Pavan")
+export default async function Icon() {
+  const { personalInfo, siteSettings } = await getPublicPortfolio();
+  const accent = ACCENTS.find((a) => a.id === siteSettings.appearance.accent)?.swatch ?? '#1d4ed8';
+  const initials =
+    personalInfo.shortName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase())
+      .join('') || 'P';
+
   return new ImageResponse(
     (
       <div
         style={{
-          fontSize: 24,
-          background: 'linear-gradient(90deg, #8B5CF6 0%, #3B82F6 100%)',
+          fontSize: 20,
+          background: accent,
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -27,11 +38,11 @@ export default function Icon() {
           fontWeight: 'bold',
         }}
       >
-        SP
+        {initials}
       </div>
     ),
     {
       ...size,
     }
-  )
+  );
 }

@@ -30,19 +30,19 @@ CREATE TABLE IF NOT EXISTS resumes (
 ALTER TABLE portfolio_data ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resumes ENABLE ROW LEVEL SECURITY;
 
--- Create policies for admin access (using service role key)
+-- Row Level Security: with RLS enabled and no policy for the anon/authenticated roles, the public
+-- (anon) API key cannot read or write these tables. The Next.js server routes use the service-role
+-- key, which bypasses RLS. Resume records stay private until you mark one as public in the admin panel.
+DROP POLICY IF EXISTS "Enable full access for service role" ON portfolio_data;
+DROP POLICY IF EXISTS "Enable full access for service role on resumes" ON resumes;
+DROP POLICY IF EXISTS "Enable read access for all users" ON portfolio_data;
+DROP POLICY IF EXISTS "Enable read access for all users on resumes" ON resumes;
+
 CREATE POLICY "Enable full access for service role" ON portfolio_data
   FOR ALL USING (auth.role() = 'service_role');
 
 CREATE POLICY "Enable full access for service role on resumes" ON resumes
   FOR ALL USING (auth.role() = 'service_role');
-
--- Create policy for public read access (for frontend display)
-CREATE POLICY "Enable read access for all users" ON portfolio_data
-  FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users on resumes" ON resumes
-  FOR SELECT USING (true);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -54,10 +54,12 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at
+DROP TRIGGER IF EXISTS update_portfolio_data_updated_at ON portfolio_data;
 CREATE TRIGGER update_portfolio_data_updated_at 
   BEFORE UPDATE ON portfolio_data 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_resumes_updated_at ON resumes;
 CREATE TRIGGER update_resumes_updated_at 
   BEFORE UPDATE ON resumes 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -292,6 +294,8 @@ INSERT INTO portfolio_data (section, data) VALUES
   "scholarship": "🏆 Reliance Foundation Scholar"
 }'),
 
+('resumes', '[]'),
+
 ('currentFocus', '[
   {
     "title": "Machine Learning & AI",
@@ -310,9 +314,8 @@ INSERT INTO portfolio_data (section, data) VALUES
   }
 ]')
 
-ON CONFLICT (section) DO UPDATE SET
-  data = EXCLUDED.data,
-  updated_at = NOW();
+-- Seed rows are only inserted when a section does not exist yet; existing content is never overwritten.
+ON CONFLICT (section) DO NOTHING;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_portfolio_data_section ON portfolio_data(section);

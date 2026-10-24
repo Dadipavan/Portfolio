@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Briefcase, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
-import { getPortfolioDataSync, updatePortfolioSection } from '@/lib/dataManager';
+import { getPortfolioDataForEditing, updatePortfolioSection } from '@/lib/dataManager';
+import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { useDraftSync } from '@/lib/previewBus';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
@@ -33,12 +35,20 @@ export default function ExperienceAdmin() {
     description: ['']
   });
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // show unsaved edits in the live preview
+  useDraftSync('experience', experiences, !loading);
+
   useEffect(() => {
-    const data = getPortfolioDataSync();
+    getPortfolioDataForEditing().then((data) => {
     if (data?.experience) {
       setExperiences(data.experience);
     }
-    setLoading(false);
+    }).catch((error: Error) => {
+      console.error('Failed to load saved content:', error);
+      setLoadError(error.message);
+    }).finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
@@ -150,6 +160,14 @@ export default function ExperienceAdmin() {
       description: prev.description?.filter((_, i) => i !== index) || []
     }));
   };
+
+  if (loadError) {
+    return (
+      <AdminLayout>
+        <AdminLoadError message={loadError} />
+      </AdminLayout>
+    );
+  }
 
   if (loading) {
     return (

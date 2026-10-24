@@ -8,8 +8,11 @@ import {
   CERTIFICATIONS, 
   ACHIEVEMENTS,
   QUICK_FACTS,
-  CURRENT_FOCUS
+  CURRENT_FOCUS,
+  SITE_SETTINGS
 } from './data';
+import { mergeSiteSettings } from './siteSettings';
+import type { Achievement, Certification, PersonalInfo, Project, Recommendation, SiteSettings } from './types';
 
 export interface Resume {
   id: string;
@@ -24,18 +27,22 @@ export interface Resume {
   cloudFileName?: string; // Unique filename in cloud storage
   cloudUrl?: string; // Public URL for cloud file
   storageType: 'local' | 'cloud'; // Storage location indicator
+  isPublic?: boolean; // Only public resumes are offered to site visitors
+  role?: string; // The role a resume is written for ('' = any role)
 }
 
 export interface PortfolioData {
-  personalInfo: typeof PERSONAL_INFO;
+  personalInfo: PersonalInfo;
   technicalSkills: typeof TECHNICAL_SKILLS;
-  projects: typeof PROJECTS;
+  projects: Project[];
   experience: typeof EXPERIENCE;
   education: typeof EDUCATION;
-  certifications: typeof CERTIFICATIONS;
-  achievements: typeof ACHIEVEMENTS;
-  quickFacts: typeof QUICK_FACTS;
+  certifications: Certification[];
+  achievements: Achievement[];
+  quickFacts: Record<string, string>;
   currentFocus: typeof CURRENT_FOCUS;
+  siteSettings?: SiteSettings;
+  recommendations?: Recommendation[];
   resumes: Resume[];
   lastUpdated: string;
 }
@@ -67,6 +74,7 @@ export function getDefaultData(): PortfolioData {
     achievements: ACHIEVEMENTS,
     quickFacts: QUICK_FACTS,
     currentFocus: CURRENT_FOCUS,
+    siteSettings: SITE_SETTINGS,
     resumes: [],
     lastUpdated: new Date().toISOString(),
   };
@@ -212,6 +220,17 @@ export async function getPortfolioData(): Promise<PortfolioData> {
   return getDefaultData();
 }
 
+// Load the saved content for the admin editors. Unlike getPortfolioData(), this never falls back to
+// cached or built-in sample content: saving a section edited from sample data would overwrite the
+// real content stored in the database.
+export async function getPortfolioDataForEditing(): Promise<PortfolioData> {
+  const data = await loadFromDatabase();
+  if (!data) {
+    throw new Error('Could not load your saved content from the database.');
+  }
+  return data;
+}
+
 // Synchronous version that returns default data (for SSR/initial renders)
 export function getPortfolioDataSync(): PortfolioData {
   if (!isLocalStorageAvailable()) {
@@ -242,6 +261,18 @@ function notifyDataUpdate(section?: string): void {
   }
 }
 
+// Tell homepages that are open in other tabs that something changed, so they refresh at once
+export function notifyOpenPages(): void {
+  if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return;
+  try {
+    const channel = new BroadcastChannel('portfolio-updates');
+    channel.postMessage({ type: 'updated' });
+    channel.close();
+  } catch {
+    /* not supported */
+  }
+}
+
 // Update specific section with database persistence and localStorage backup
 export async function updatePortfolioSection<K extends keyof Omit<PortfolioData, 'lastUpdated'>>(
   section: K,
@@ -269,6 +300,7 @@ export async function updatePortfolioSection<K extends keyof Omit<PortfolioData,
       
       // Notify UI components about the update
       notifyDataUpdate(section);
+      notifyOpenPages();
       
       console.log(`✅ Section ${section} updated successfully`);
       return true;
@@ -279,6 +311,34 @@ export async function updatePortfolioSection<K extends keyof Omit<PortfolioData,
   } catch (error) {
     console.error(`Error updating ${section} section:`, error);
     return false;
+  }
+}
+
+// Saves only the settings a page owns. The latest settings are read from the database right before saving,
+// so two admin pages (or two browser tabs) never overwrite each other's changes. Returns the saved settings.
+export async function saveSiteSettingsPatch(patch: Partial<SiteSettings>): Promise<SiteSettings | null> {
+  try {
+    const latest = await getPortfolioDataForEditing();
+    const next = mergeSiteSettings({ ...mergeSiteSettings(latest.siteSettings), ...patch });
+    const ok = await updatePortfolioSection('siteSettings', next);
+    return ok ? next : null;
+  } catch (error) {
+    console.error('Saving the site settings failed:', error);
+    return null;
+  }
+}
+
+// Saves only some of the personal details (for example the photo) on top of what is saved right now, so a page that
+// was opened earlier can never undo a change made somewhere else. Returns the saved details.
+export async function savePersonalPatch(patch: Partial<PersonalInfo>): Promise<PersonalInfo | null> {
+  try {
+    const latest = await getPortfolioDataForEditing();
+    const next = { ...latest.personalInfo, ...patch } as PersonalInfo;
+    const ok = await updatePortfolioSection('personalInfo', next);
+    return ok ? next : null;
+  } catch (error) {
+    console.error('Saving the personal details failed:', error);
+    return null;
   }
 }
 

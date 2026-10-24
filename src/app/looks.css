@@ -1,0 +1,11 @@
+/* The newer looks. One file per look below; base.css holds what they share.
+   Everything here is scoped to [data-layout="<look>"], so nothing changes for the other looks. */
+@import "./looks/base.css";
+@import "./looks/portrait.css";
+@import "./looks/editorial.css";
+@import "./looks/terminal.css";
+@import "./looks/classic.css";
+@import "./looks/spotlight.css";
+@import "./looks/aurora.css";
+@import "./looks/brutal.css";
+@import "./looks/notebook.css";

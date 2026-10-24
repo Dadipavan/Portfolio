@@ -1,52 +1,787 @@
 @import "tailwindcss";
 
+/* `dark:` utilities follow our theme switch (the data-theme attribute), not only the device setting */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------ */
+/* Design tokens. Light is the default; dark and the accent colours     */
+/* override the same variables, so every component follows the theme.   */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-page: #ffffff;
+  --color-card: #ffffff;
+  --color-surface: #f8fafc;
+  --color-ink: #0f172a;
+  --color-body: #334155;
+  --color-muted: #475569;
+  --color-subtle: #64748b;
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+  --color-control: #788799; /* form control borders: 3.7:1 against white */
+
+  /* accent: fill (white text on it), hover fill, text on the page, tint, text on the tint */
+  --color-accent: #1d4ed8;
+  --color-accent-strong: #1e3a8a;
+  --color-accent-ink: #1d4ed8;
+  --color-accent-soft: #eff6ff;
+  --color-accent-soft-ink: #1e3a8a;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 18px 36px -14px rgb(15 23 42 / 0.2);
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-slide-in: slide-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-ping-soft: ping-soft 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-caret: caret 1.1s steps(1) infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(32px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes ping-soft {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    80%,
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes caret {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/* Dark theme (set on <html> by the theme script) */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #0a1020;
+  --color-card: #111a2e;
+  --color-surface: #0d1526;
+  --color-ink: #f1f5f9;
+  --color-body: #cbd5e1;
+  --color-muted: #a3b3c9;
+  --color-subtle: #8d9db5;
+  --color-line: #1e2a43;
+  --color-line-strong: #2c3b5a;
+  --color-control: #6b7d99;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 30px -14px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 20px 40px -16px rgb(0 0 0 / 0.7);
+}
+
+/* Accent colours. Light first, then the dark-theme variants (lighter text, darker tints). */
+[data-accent="teal"] {
+  --color-accent: #0f766e;
+  --color-accent-strong: #134e4a;
+  --color-accent-ink: #0f766e;
+  --color-accent-soft: #f0fdfa;
+  --color-accent-soft-ink: #134e4a;
+}
+[data-accent="violet"] {
+  --color-accent: #6d28d9;
+  --color-accent-strong: #4c1d95;
+  --color-accent-ink: #6d28d9;
+  --color-accent-soft: #f5f3ff;
+  --color-accent-soft-ink: #4c1d95;
+}
+[data-accent="amber"] {
+  --color-accent: #b45309;
+  --color-accent-strong: #78350f;
+  --color-accent-ink: #b45309;
+  --color-accent-soft: #fffbeb;
+  --color-accent-soft-ink: #78350f;
+}
+html[data-theme="dark"] [data-accent="blue"],
+html[data-theme="dark"][data-accent="blue"] {
+  --color-accent: #2563eb;
+  --color-accent-strong: #1d4ed8;
+  --color-accent-ink: #7aa7ff;
+  --color-accent-soft: #14234a;
+  --color-accent-soft-ink: #bfd4ff;
+}
+html[data-theme="dark"] [data-accent="teal"],
+html[data-theme="dark"][data-accent="teal"] {
+  --color-accent: #0f766e;
+  --color-accent-strong: #115e59;
+  --color-accent-ink: #4fd8c8;
+  --color-accent-soft: #0e2a2c;
+  --color-accent-soft-ink: #9bf3e4;
+}
+html[data-theme="dark"] [data-accent="violet"],
+html[data-theme="dark"][data-accent="violet"] {
+  --color-accent: #7c3aed;
+  --color-accent-strong: #6d28d9;
+  --color-accent-ink: #b6a0ff;
+  --color-accent-soft: #1f1640;
+  --color-accent-soft-ink: #dcd2ff;
+}
+html[data-theme="dark"] [data-accent="amber"],
+html[data-theme="dark"][data-accent="amber"] {
+  --color-accent: #b45309;
+  --color-accent-strong: #92400e;
+  --color-accent-ink: #fbbf24;
+  --color-accent-soft: #2a1f0b;
+  --color-accent-soft-ink: #fde68a;
+}
+/* the default accent in dark needs its variant even when no data-accent is set */
+html[data-theme="dark"]:not([data-accent]) {
+  --color-accent: #2563eb;
+  --color-accent-strong: #1d4ed8;
+  --color-accent-ink: #7aa7ff;
+  --color-accent-soft: #14234a;
+  --color-accent-soft-ink: #bfd4ff;
+}
+
+/* One colour family per role, used consistently for chips, charts and project covers.
+   data-track holds the family chosen for the role in Admin > Roles ('none' = no role). */
+[data-track="teal"] {
+  --track-fg: #115e59;
+  --track-bg: #f0fdfa;
+  --track-line: #99f6e4;
+  --track-dot: #0d9488;
+}
+[data-track="amber"] {
+  --track-fg: #92400e;
+  --track-bg: #fffbeb;
+  --track-line: #fde68a;
+  --track-dot: #d97706;
+}
+[data-track="blue"] {
+  --track-fg: #1e40af;
+  --track-bg: #eff6ff;
+  --track-line: #bfdbfe;
+  --track-dot: #2563eb;
+}
+[data-track="violet"] {
+  --track-fg: #5b21b6;
+  --track-bg: #f5f3ff;
+  --track-line: #ddd6fe;
+  --track-dot: #7c3aed;
+}
+[data-track="rose"] {
+  --track-fg: #9f1239;
+  --track-bg: #fff1f2;
+  --track-line: #fecdd3;
+  --track-dot: #e11d48;
+}
+[data-track="green"] {
+  --track-fg: #166534;
+  --track-bg: #f0fdf4;
+  --track-line: #bbf7d0;
+  --track-dot: #16a34a;
+}
+[data-track="orange"] {
+  --track-fg: #9a3412;
+  --track-bg: #fff7ed;
+  --track-line: #fed7aa;
+  --track-dot: #ea580c;
+}
+[data-track="cyan"] {
+  --track-fg: #155e75;
+  --track-bg: #ecfeff;
+  --track-line: #a5f3fc;
+  --track-dot: #0891b2;
+}
+[data-track="none"] {
+  --track-fg: #334155;
+  --track-bg: #f8fafc;
+  --track-line: #e2e8f0;
+  --track-dot: #64748b;
+}
+html[data-theme="dark"] [data-track="teal"] {
+  --track-fg: #5eead4;
+  --track-bg: #0e2a2c;
+  --track-line: #115e59;
+  --track-dot: #2dd4bf;
+}
+html[data-theme="dark"] [data-track="amber"] {
+  --track-fg: #fcd34d;
+  --track-bg: #2a1f0b;
+  --track-line: #92400e;
+  --track-dot: #fbbf24;
+}
+html[data-theme="dark"] [data-track="blue"] {
+  --track-fg: #93c5fd;
+  --track-bg: #14234a;
+  --track-line: #1d4ed8;
+  --track-dot: #60a5fa;
+}
+html[data-theme="dark"] [data-track="violet"] {
+  --track-fg: #c4b5fd;
+  --track-bg: #1f1640;
+  --track-line: #6d28d9;
+  --track-dot: #a78bfa;
+}
+html[data-theme="dark"] [data-track="rose"] {
+  --track-fg: #fda4af;
+  --track-bg: #2e1219;
+  --track-line: #9f1239;
+  --track-dot: #fb7185;
+}
+html[data-theme="dark"] [data-track="green"] {
+  --track-fg: #86efac;
+  --track-bg: #0f2a1a;
+  --track-line: #166534;
+  --track-dot: #4ade80;
+}
+html[data-theme="dark"] [data-track="orange"] {
+  --track-fg: #fdba74;
+  --track-bg: #2b1608;
+  --track-line: #9a3412;
+  --track-dot: #fb923c;
+}
+html[data-theme="dark"] [data-track="cyan"] {
+  --track-fg: #67e8f9;
+  --track-bg: #0b2a33;
+  --track-line: #155e75;
+  --track-dot: #22d3ee;
+}
+html[data-theme="dark"] [data-track="none"] {
+  --track-fg: #cbd5e1;
+  --track-bg: #0d1526;
+  --track-line: #1e2a43;
+  --track-dot: #8d9db5;
+}
+
+/* Shape of cards in each look */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --radius-card: 1rem;
+}
+[data-layout="dashboard"] {
+  --radius-card: 0.875rem;
+}
+[data-layout="bento"] {
+  --radius-card: 1.5rem;
+}
+[data-layout="lab"] {
+  --radius-card: 1.25rem;
+}
+[data-layout="split"] {
+  --radius-card: 0.75rem;
+}
+[data-layout="story"] {
+  --radius-card: 1.25rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  background: var(--color-page);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Tailwind 4 no longer shows the pointing hand on buttons; restore it for everything clickable */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  [role="option"],
+  summary {
+    cursor: pointer;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+/* Keyboard focus: a clear, high-contrast ring on every interactive element */
+:focus-visible {
+  outline: 2px solid var(--color-accent-ink);
+  outline-offset: 2px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 30%, transparent);
+  color: var(--color-ink);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* Anchor targets sit below the sticky header */
+section[id] {
+  scroll-margin-top: 4.5rem;
 }
 
-/* Smooth focus visible */
-*:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.2);
+/* Alternate section backgrounds by position among the sections that are actually shown.
+   The first section is the hero (plain), so the next one is tinted, and so on. */
+.site-main > section:nth-of-type(even) {
+  background: var(--color-surface);
+  border-block: 1px solid var(--color-line);
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-8 2xl:max-w-7xl;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-accent-ink;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent px-5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-accent-strong;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-line-strong bg-card px-5 text-sm font-semibold text-ink transition-colors duration-150 hover:bg-surface;
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium text-muted transition-colors duration-150 hover:bg-surface hover:text-ink;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-medium text-muted;
+  }
+
+  /* a chip that opens the explorer */
+  .tag {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-medium text-muted transition-colors duration-150 hover:border-accent hover:text-accent-ink;
+  }
+
+  .card {
+    border-radius: var(--radius-card);
+    @apply border border-line bg-card shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-[box-shadow,transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift;
+  }
+
+  .field {
+    @apply block w-full rounded-lg border border-control bg-card px-3.5 py-2.5 text-sm text-ink placeholder:text-subtle;
+  }
+
+  .kbd {
+    @apply inline-flex h-5 min-w-5 items-center justify-center whitespace-nowrap rounded border border-line bg-surface px-1.5 font-mono text-[11px] font-medium text-muted;
+  }
+
+  .pill {
+    @apply inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full border border-line bg-card px-3.5 text-sm font-medium text-muted transition-colors duration-150 hover:border-line-strong hover:text-ink;
+  }
+
+  .pill[aria-pressed="true"],
+  .pill[aria-selected="true"],
+  .pill[data-active="true"] {
+    @apply border-accent bg-accent text-white;
+  }
+
+  /* label in the data-style font */
+  .mono-label {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-subtle;
+  }
+
+  /* small status label above the name, for example "Data enthusiast" */
+  /* the "available for work" badge */
+  .badge-ok {
+    @apply inline-flex items-center gap-2.5 rounded-full border border-green-300 bg-green-50 px-3.5 py-1.5 text-sm font-medium text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300;
+  }
+
+  .kicker {
+    @apply inline-flex items-center gap-2 rounded-md border border-line bg-card px-3 py-1.5 font-mono text-xs font-medium text-accent-ink;
+  }
+
+  /* Track-coloured pill: set data-track on the element */
+  .track-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold;
+    color: var(--track-fg);
+    background: var(--track-bg);
+    border-color: var(--track-line);
+  }
+
+  .track-dot {
+    @apply inline-block h-2 w-2 shrink-0 rounded-full;
+    background: var(--track-dot);
+  }
+
+  /* number tiles */
+  .tile {
+    border-radius: var(--radius-card);
+    @apply border border-line bg-card p-5 shadow-card;
+  }
 }
 
-/* Prevent horizontal overflow on small screens */
-html, body {
-  overflow-x: hidden;
+.json-key {
+  color: var(--color-accent-ink);
+}
+.json-string {
+  color: #047857;
+}
+.json-num {
+  color: #b45309;
+}
+html[data-theme="dark"] .json-string {
+  color: #6ee7b7;
+}
+html[data-theme="dark"] .json-num {
+  color: #fbbf24;
 }
 
-/* Modal safe area padding for iOS */
+/* Touch screens: bigger targets for the small interactive tags, and no hover-only effects */
+@media (pointer: coarse) {
+  .tag {
+    min-height: 2.25rem;
+    padding-inline: 0.75rem;
+  }
+}
+
+/* Large monitors and TVs: the whole page scales up a little so it does not look small and lost.
+   (Media queries use the browser's own 16px, so the layout breakpoints do not move.) */
+@media (min-width: 1700px) {
+  html {
+    font-size: 106.25%;
+  }
+}
+@media (min-width: 2200px) {
+  html {
+    font-size: 125%;
+  }
+}
+@media (min-width: 3000px) {
+  html {
+    font-size: 150%;
+  }
+}
+
+/* Decorative dot grid, faded out towards the edges */
+.bg-dots {
+  background-image: radial-gradient(circle at 1px 1px, var(--color-line-strong) 1px, transparent 0);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 30% 20%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 30% 20%, #000 0%, transparent 75%);
+}
+
+/* The story look separates chapters with its own banners instead of tinted bands */
+[data-layout="story"] .site-main > section:nth-of-type(even) {
+  background: transparent;
+  border-block: 0;
+}
+
+/* Per-track dot pattern used on project covers */
+.cover-dots {
+  background-image: radial-gradient(circle at 1px 1px, var(--track-line) 1.2px, transparent 0);
+  background-size: 16px 16px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Look: Data Lab (dark glass)                                          */
+/* ------------------------------------------------------------------ */
+[data-layout="lab"] .card,
+[data-layout="lab"] .tile {
+  background: color-mix(in oklab, var(--color-card) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: color-mix(in oklab, var(--color-accent-ink) 24%, var(--color-line));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-accent) 8%, transparent),
+    0 14px 44px -16px color-mix(in oklab, var(--color-accent) 40%, transparent);
+}
+[data-layout="lab"] .site-main > section:nth-of-type(even) {
+  background: color-mix(in oklab, var(--color-surface) 55%, transparent);
+}
+[data-layout="lab"] .gradient-text {
+  background-image: linear-gradient(100deg, var(--color-ink) 15%, var(--color-accent-ink) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lab-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 0%, color-mix(in oklab, var(--color-accent) 30%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, color-mix(in oklab, var(--color-accent-ink) 14%, transparent), transparent 70%);
+}
+.lab-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 0%, transparent 80%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 0%, transparent 80%);
+}
+
+/* Constellation nodes drift very slowly */
+@keyframes drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0.7px, -0.9px);
+  }
+}
+.node-drift {
+  animation: drift 6s ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+/* A pulse that travels along the pipeline */
+@keyframes flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.pipeline-flow {
+  stroke-dasharray: 4 8;
+  animation: flow 1.4s linear infinite;
+}
+
+/* Scroll reveal: content is visible by default (works without JavaScript);
+   the client component only hides items that are below the fold. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* Brief highlight when an item is opened from search, a chart or a link */
+.flash-highlight {
+  animation: flash-highlight 1.8s ease-out;
+}
+
+@keyframes flash-highlight {
+  0%,
+  60% {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 0%, transparent);
+  }
+}
+
+/* Visitors (or the admin) can switch animation off completely */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+html[data-motion="off"] .reveal-hidden {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-hidden {
+    opacity: 1;
+    transform: none;
+  }
+  .reveal {
+    transition: none;
+  }
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-ping-soft,
+  .animate-caret,
+  .flash-highlight,
+  .node-drift,
+  .pipeline-flow {
+    animation: none !important;
+  }
+  .card-hover {
+    transition: none;
+  }
+  .card-hover:hover {
+    translate: none;
+  }
+}
+
+/* Modal safe area padding for iOS (used by admin dialogs) */
 .modal-safe-area {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+@media print {
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Text written in the admin (Markdown): case studies, achievements    */
+/* ------------------------------------------------------------------ */
+.md {
+  color: var(--color-body);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p {
+  margin: 0.9em 0;
+}
+.md h3,
+.md h4,
+.md h5,
+.md h6 {
+  margin: 1.5em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.md h3 {
+  font-size: 1.25rem;
+}
+.md h4 {
+  font-size: 1.1rem;
+}
+.md h5,
+.md h6 {
+  font-size: 1rem;
+}
+.md ul,
+.md ol {
+  margin: 0.9em 0;
+  padding-left: 1.4em;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 0.3em 0;
+  padding-left: 0.2em;
+}
+.md li > ul,
+.md li > ol {
+  margin: 0.3em 0;
+}
+.md blockquote {
+  margin: 1em 0;
+  padding: 0.3em 1em;
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+.md a {
+  color: var(--color-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md code.md-code {
+  border: 1px solid var(--color-line);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.md pre.md-pre {
+  margin: 1em 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  padding: 1em;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+.md pre.md-pre code {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.md hr {
+  margin: 1.6em 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+.md .md-figure {
+  display: block;
+  margin: 1.2em 0;
+}
+.md .md-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+}
+.md .md-caption {
+  display: block;
+  margin-top: 0.4em;
+  font-size: 0.85rem;
+  color: var(--color-subtle);
 }

@@ -1,38 +1,65 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseServer'
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseServer';
+import { requireAdmin } from '@/lib/server/session';
 
-// Upload certificate file to 'certificates' bucket
+const BUCKET = 'certificates';
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  pdf: 'application/pdf',
+};
+
+// Upload a certificate image/PDF (admin only)
 export async function POST(request: NextRequest) {
-  try {
-    const form = await request.formData()
-    const file = form.get('file') as any
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
-    if (!file) {
-      return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 })
+  try {
+    const form = await request.formData();
+    const file = form.get('file');
+
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: 'File is larger than 5 MB' },
+        { status: 400 }
+      );
     }
 
-    const originalName = file.name || `upload_${Date.now()}`
-    const ext = originalName.split('.').pop() || ''
-    const base = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_')
-    const uniqueName = `${base}_${Date.now()}_${Math.random().toString(36).substring(2,8)}.${ext}`
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const contentType = ALLOWED_TYPES[ext];
+    if (!contentType) {
+      return NextResponse.json(
+        { success: false, error: 'Only PNG, JPG, WEBP and PDF files are allowed' },
+        { status: 400 }
+      );
+    }
 
-    // Ensure bucket exists and upload
-    const bucketName = 'certificates'
+    const base =
+      file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .slice(0, 60) || 'certificate';
+    const uniqueName = `${base}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-    const { data, error: uploadError } = await supabaseAdmin.storage
-      .from(bucketName)
-      .upload(uniqueName, file as any)
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .upload(uniqueName, Buffer.from(await file.arrayBuffer()), { contentType, upsert: false });
 
     if (uploadError) {
-      console.error('Upload failed:', uploadError)
-      return NextResponse.json({ success: false, error: uploadError.message }, { status: 500 })
+      console.error('Certificate upload failed:', uploadError.message);
+      return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 });
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from(bucketName).getPublicUrl(uniqueName)
-
-    return NextResponse.json({ success: true, fileName: uniqueName, publicUrl: urlData.publicUrl })
+    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(uniqueName);
+    return NextResponse.json({ success: true, fileName: uniqueName, publicUrl: urlData.publicUrl });
   } catch (err) {
-    console.error('Upload route error:', err)
-    return NextResponse.json({ success: false, error: err instanceof Error ? err.message : 'Upload failed' }, { status: 500 })
+    console.error('Certificate upload route error:', err);
+    return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 });
   }
 }

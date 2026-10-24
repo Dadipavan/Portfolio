@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Settings } from 'lucide-react';
-import { Resume } from '@/lib/dataManager';
+import { Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
+import { Resume, getPortfolioData } from '@/lib/dataManager';
 import { ResumeManager } from '@/lib/resumeManager';
-import { testSupabaseConnection } from '@/lib/supabase';
+import { mergeSiteSettings } from '@/lib/siteSettings';
+import type { RoleDef } from '@/lib/types';
 import AdminLayout from '@/components/AdminLayout';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -28,10 +29,14 @@ export default function ResumesAdmin() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [preferCloud, setPreferCloud] = useState(true);
+  // the roles set up in Admin > Roles, so a resume can be written for one of them
+  const [roles, setRoles] = useState<RoleDef[]>([]);
 
   useEffect(() => {
     loadResumes();
+    getPortfolioData()
+      .then((data) => setRoles(mergeSiteSettings(data.siteSettings).roles))
+      .catch(() => undefined);
   }, []);
 
   const loadResumes = async () => {
@@ -105,21 +110,30 @@ export default function ResumesAdmin() {
     }
   }
 
+  // Same checks as the dashboard's System check, limited to what matters for resumes
   const testConnection = async () => {
     try {
       setLoading(true);
-      const result = await testSupabaseConnection();
-      if (result.success) {
-        alert('✅ Supabase connection successful!');
-      } else {
-        alert('❌ Supabase connection failed: ' + result.error);
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        alert('The check could not run: ' + (json.error || res.statusText));
+        return;
       }
+      const icons: Record<string, string> = { ok: '✅', warn: '⚠️', error: '❌', info: 'ℹ️' };
+      const wanted = ['database', 'resume-bucket', 'public-resume', 'public-listing'];
+      alert(
+        json.checks
+          .filter((c: { id: string }) => wanted.includes(c.id))
+          .map((c: { status: string; label: string; message: string }) => `${icons[c.status]} ${c.label}: ${c.message}`)
+          .join('\n\n')
+      );
     } catch (err) {
-      alert('❌ Connection test failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      alert('The check could not run: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -191,8 +205,7 @@ export default function ResumesAdmin() {
         await ResumeManager.uploadResume(
           selectedFile,
           formData.name!,
-          formData.description!,
-          preferCloud
+          formData.description!
         );
         
         await loadResumes(); // Reload to get new data
@@ -255,6 +268,24 @@ export default function ResumesAdmin() {
     }
   };
 
+  const handleTogglePublic = async (resume: Resume) => {
+    const success = await ResumeManager.setResumePublic(resume.id, !resume.isPublic);
+    if (success) {
+      await loadResumes();
+    } else {
+      alert('Could not update this resume. Please try again.');
+    }
+  };
+
+  const handleRoleChange = async (resume: Resume, role: string) => {
+    const success = await ResumeManager.updateResume(resume.id, { role });
+    if (success) {
+      await loadResumes();
+    } else {
+      alert('Could not update the role of this resume. Please try again.');
+    }
+  };
+
   const getStorageIcon = (storageType?: string) => {
     if (storageType === 'cloud') {
       return <Cloud size={14} className="text-blue-500" />;
@@ -291,16 +322,16 @@ export default function ResumesAdmin() {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Resume Management</h2>
-                <p className="text-sm text-gray-500">Upload, manage, and download your resumes (Admin Only)</p>
+                <p className="text-sm text-gray-500">Upload and manage resumes. Only the one marked Public appears on your site.</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={testConnection}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm text-sm"
-                title="Test Supabase Connection"
+                title="Check the database and storage setup"
               >
-                <Settings size={14} />
+                <ShieldCheck size={14} />
                 Test
               </button>
               <button
@@ -354,38 +385,6 @@ export default function ResumesAdmin() {
               </div>
 
               <div className="space-y-6">
-                {/* Storage Preference */}
-                {editingIndex === null && (
-                  <div>
-                    <label className={labelStyles}>Storage Preference</label>
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={preferCloud}
-                          onChange={() => setPreferCloud(true)}
-                          className="text-purple-600 focus:ring-purple-500"
-                        />
-                        <Cloud size={16} className="text-blue-500" />
-                        <span className="text-sm text-gray-700">Cloud Storage (Recommended)</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={!preferCloud}
-                          onChange={() => setPreferCloud(false)}
-                          className="text-purple-600 focus:ring-purple-500"
-                        />
-                        <HardDrive size={16} className="text-gray-500" />
-                        <span className="text-sm text-gray-700">Local Storage</span>
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Cloud storage allows you to access files from anywhere. Local storage saves files in browser only.
-                    </p>
-                  </div>
-                )}
-
                 <div>
                   <label className={labelStyles}>Resume Name *</label>
                   <input
@@ -608,6 +607,25 @@ export default function ResumesAdmin() {
                           </div>
                         </div>
                         <p className="text-gray-600 text-sm mb-2">{resume.description}</p>
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <label htmlFor={`resume-role-${resume.id}`} className="text-xs font-medium text-gray-600">
+                            Offered when visitors choose
+                          </label>
+                          <select
+                            id={`resume-role-${resume.id}`}
+                            value={resume.role || ''}
+                            onChange={(e) => handleRoleChange(resume, e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900"
+                          >
+                            <option value="">Any role (the general resume)</option>
+                            {roles.map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.title || role.label}
+                              </option>
+                            ))}
+                            {resume.role && !roles.some((role) => role.id === resume.role) && <option value={resume.role}>{resume.role} (role removed)</option>}
+                          </select>
+                        </div>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>📄 {resume.fileName}</span>
                           <span>📊 {resume.fileSize}</span>
@@ -617,6 +635,18 @@ export default function ResumesAdmin() {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleTogglePublic(resume)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          resume.isPublic
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        title={resume.isPublic ? 'Offered to visitors. Click to make private' : 'Private. Click to offer it to visitors'}
+                      >
+                        {resume.isPublic ? <Globe size={12} /> : <Lock size={12} />}
+                        {resume.isPublic ? 'Public' : 'Private'}
+                      </button>
                       <button
                         onClick={() => handleDownload(resume)}
                         className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"

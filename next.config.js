@@ -1,34 +1,24 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Fix workspace root detection warning
-  outputFileTracingRoot: __dirname,
-  
-  // Optimize for production deployment
-  output: 'standalone',
-  
-  // Handle file system for API routes (moved from experimental)
-  serverExternalPackages: ['fs'],
-  
-  // File system configuration for webpack
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push('fs', 'path');
-    }
-    return config;
-  },
-  
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
-  },
-}
 
-module.exports = nextConfig
+// Security headers sent with every response.
+// A Content-Security-Policy is intentionally not set: Next.js needs nonces or 'unsafe-inline'
+// for its inline scripts, and a half-configured policy would break the site.
+const securityHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // SAMEORIGIN (not DENY): the admin panel shows the site in a live preview frame
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+];
+
+const nextConfig = {
+  // Pin the workspace root so Next does not pick up lockfiles from parent folders
+  outputFileTracingRoot: __dirname,
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
+};
+
+module.exports = nextConfig;

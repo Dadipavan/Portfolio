@@ -10,6 +10,22 @@ import {
   isValidSectionPayload,
 } from '@/lib/server/sections';
 
+// Visitors must never receive drafts: an unpublished project or achievement, or a hidden certificate. The admin
+// gets every entry exactly as stored.
+const HIDDEN_FLAG: Record<string, 'published' | 'visible'> = {
+  projects: 'published',
+  achievements: 'published',
+  certifications: 'visible',
+};
+
+function withoutDrafts(section: string, data: unknown): unknown {
+  const flag = HIDDEN_FLAG[section];
+  if (!flag || !Array.isArray(data)) return data;
+  return data.filter(
+    (item) => !(item && typeof item === 'object' && (item as Record<string, unknown>)[flag] === false)
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { data: portfolioSections, error } = await supabaseAdmin
@@ -40,7 +56,9 @@ export async function GET(request: NextRequest) {
         const resumes = Array.isArray(section.data) ? section.data : [];
         portfolioData.resumes = isAdmin ? resumes : toPublicResumes(resumes);
       } else {
-        portfolioData[section.section] = section.data;
+        portfolioData[section.section] = isAdmin
+          ? section.data
+          : withoutDrafts(section.section, section.data);
       }
     });
 

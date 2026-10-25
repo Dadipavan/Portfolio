@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Briefcase, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Briefcase, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { getPortfolioDataForEditing, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { PageBanner } from '@/components/admin/kit';
 import { useDraftSync } from '@/lib/previewBus';
 
-const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
+const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 interface Experience {
@@ -184,16 +185,12 @@ export default function ExperienceAdmin() {
       <div className="max-w-6xl mx-auto">
         <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Experience Management</h2>
-              <p className="text-sm text-gray-500">Manage your work experience and roles</p>
-            </div>
-          </div>
+        <PageBanner
+          icon={Briefcase}
+          title="Experience Management"
+          subtitle="Manage your work experience and roles"
+          chips={[`${experiences.length} ${experiences.length === 1 ? 'role' : 'roles'}`]}
+        >
           <button
             onClick={() => {
               setShowAddForm(true);
@@ -207,19 +204,19 @@ export default function ExperienceAdmin() {
                 description: ['']
               });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap shadow-sm"
           >
             <Plus size={16} />
             Add Experience
           </button>
-        </div>
+        </PageBanner>
 
         {/* Add/Edit Form */}
         {showAddForm && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+            className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -338,7 +335,7 @@ export default function ExperienceAdmin() {
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap font-medium shadow-sm"
               >
                 <Save size={16} />
                 {editingId ? 'Update Experience' : 'Add Experience'}
@@ -350,13 +347,13 @@ export default function ExperienceAdmin() {
         {/* Experience List */}
         <div className="space-y-4">
           {experiences.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
               <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No experience added yet</h3>
               <p className="text-gray-500 mb-4">Start by adding your work experience and roles</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap"
               >
                 <Plus size={16} />
                 Add Your First Experience
@@ -369,7 +366,7 @@ export default function ExperienceAdmin() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm hover:border-purple-200 hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -379,7 +376,7 @@ export default function ExperienceAdmin() {
                         {experience.type}
                       </span>
                     </div>
-                    <p className="text-purple-600 font-medium mb-1">{experience.company}</p>
+                    <p className="mb-1 flex items-center gap-1.5 font-medium text-purple-700"><Building2 size={15} className="shrink-0 text-purple-400" aria-hidden="true" />{experience.company}</p>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                       <span>{experience.period}</span>
                       {experience.location && <span>• {experience.location}</span>}
@@ -396,30 +393,30 @@ export default function ExperienceAdmin() {
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="ml-4 flex items-center self-start rounded-xl border border-gray-200 bg-gray-50/70 p-0.5">
                     <button
                       onClick={() => moveExperience(index, -1)}
                       title="Move up"
-                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm transition"
                     >
                       <ChevronUp size={16} />
                     </button>
                     <button
                       onClick={() => moveExperience(index, 1)}
                       title="Move down"
-                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm transition"
                     >
                       <ChevronDown size={16} />
                     </button>
                     <button
                       onClick={() => handleEdit(experience)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm transition"
                     >
                       <Edit size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(experience.id)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-red-600 hover:bg-white hover:shadow-sm transition"
                     >
                       <Trash2 size={16} />
                     </button>

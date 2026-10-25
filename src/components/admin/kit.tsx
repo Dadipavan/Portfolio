@@ -36,6 +36,55 @@ export function PageHeader({
   );
 }
 
+const BANNER_TONES = {
+  purple: 'from-purple-100 to-indigo-100 ring-purple-200/70 text-purple-600',
+  green: 'from-emerald-100 to-green-100 ring-emerald-200/70 text-emerald-600',
+  blue: 'from-sky-100 to-blue-100 ring-sky-200/70 text-blue-600',
+} as const;
+
+// The top of an admin page: icon, title, a line of help, summary chips and the page's main buttons
+export function PageBanner({
+  icon: Icon,
+  title,
+  subtitle,
+  tone = 'purple',
+  chips = [],
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  tone?: keyof typeof BANNER_TONES;
+  chips?: string[];
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${BANNER_TONES[tone]}`}>
+            <Icon className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight text-gray-900">{title}</h1>
+            <p className="text-sm text-gray-500">{subtitle}</p>
+          </div>
+        </div>
+        {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
+      </div>
+      {chips.length > 0 && (
+        <div className="mt-5 flex flex-wrap gap-2 border-t border-gray-100 pt-4 text-xs font-medium">
+          {chips.map((chip) => (
+            <span key={chip} className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Panel({
   title,
   description,

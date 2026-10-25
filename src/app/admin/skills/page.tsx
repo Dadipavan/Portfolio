@@ -6,9 +6,10 @@ import { Plus, Edit, Trash2, Settings, Save, X, ChevronDown, ChevronUp } from 'l
 import { getPortfolioDataForEditing, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { PageBanner } from '@/components/admin/kit';
 import { useDraftSync } from '@/lib/previewBus';
 
-const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
+const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 interface SkillCategory {
@@ -202,16 +203,15 @@ export default function SkillsAdmin() {
     <AdminLayout>
       <div className="max-w-5xl mx-auto">
         <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Settings className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Skills Management</h2>
-              <p className="text-sm text-gray-500">Organize skills by categories</p>
-            </div>
-          </div>
+        <PageBanner
+          icon={Settings}
+          title="Skills Management"
+          subtitle="Organize skills by categories"
+          chips={[
+            `${skillCategories.length} ${skillCategories.length === 1 ? 'category' : 'categories'}`,
+            `${skillCategories.reduce((sum, c) => sum + c.skills.length, 0)} skills`,
+          ]}
+        >
           <button
             onClick={() => {
               setShowAddForm(true);
@@ -219,18 +219,18 @@ export default function SkillsAdmin() {
               setFormData({ category: '', emoji: '', skills: [] });
               setNewSkill('');
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap shadow-sm"
           >
             <Plus size={16} />
             Add Category
           </button>
-        </div>
+        </PageBanner>
 
         {showAddForm && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+            className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -288,7 +288,7 @@ export default function SkillsAdmin() {
                     <button
                       type="button"
                       onClick={addSkillToForm}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-4 py-2 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition whitespace-nowrap"
                     >
                       Add
                     </button>
@@ -332,7 +332,7 @@ export default function SkillsAdmin() {
               <button
                 onClick={handleSubmit}
                 disabled={!formData.category || formData.skills.length === 0}
-                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save size={16} />
                 {editingCategory !== null ? 'Update Category' : 'Add Category'}
@@ -343,13 +343,13 @@ export default function SkillsAdmin() {
 
         <div className="space-y-4">
           {skillCategories.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
               <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No skill categories added yet</h3>
               <p className="text-gray-500 mb-4">Start by adding your first skill category</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap"
               >
                 <Plus size={16} />
                 Add Your First Category
@@ -362,7 +362,7 @@ export default function SkillsAdmin() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:border-purple-200 hover:shadow-md transition-all"
               >
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3 flex-1">
@@ -373,36 +373,36 @@ export default function SkillsAdmin() {
                       {expandedCategories.has(index) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      {category.emoji && <span className="text-2xl leading-none">{category.emoji}</span>}
+                      {category.emoji && <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-xl leading-none ring-1 ring-purple-100">{category.emoji}</span>}
                       <span>{category.category}</span>
                     </h3>
                     <span className="text-sm text-gray-500">({category.skills.length} skills)</span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50/70 p-0.5">
                       <button
                         onClick={() => moveCategory(index, -1)}
                         title="Move up"
-                        className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                        className="rounded-lg p-2 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm transition"
                       >
                         <ChevronUp size={16} />
                       </button>
                       <button
                         onClick={() => moveCategory(index, 1)}
                         title="Move down"
-                        className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                        className="rounded-lg p-2 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm transition"
                       >
                         <ChevronDown size={16} />
                       </button>
                     <button
                       onClick={() => handleEdit(category, index)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm transition"
                     >
                       <Edit size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(index)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="rounded-lg p-2 text-gray-500 hover:text-red-600 hover:bg-white hover:shadow-sm transition"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -415,7 +415,7 @@ export default function SkillsAdmin() {
                       {category.skills.map((skill, skillIndex) => (
                         <span
                           key={skillIndex}
-                          className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+                          className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800 ring-1 ring-gray-200/70"
                         >
                           {skill}
                         </span>

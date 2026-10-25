@@ -6,9 +6,10 @@ import { Save, GraduationCap, Plus, Edit, Trash2 } from 'lucide-react';
 import { getPortfolioDataForEditing, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { PageBanner } from '@/components/admin/kit';
 import { useDraftSync } from '@/lib/previewBus';
 
-const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
+const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 interface Education {
@@ -165,35 +166,30 @@ export default function EducationAdmin() {
     <AdminLayout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Education Management</h1>
-                <p className="text-gray-600">Manage your educational background</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <Plus size={16} />
-                Add Education
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-              >
-                <Save size={16} />
-                {saving ? 'Saving...' : 'Save All'}
-              </button>
-            </div>
-          </div>
+        <div className="mb-6">
+          <PageBanner
+            icon={GraduationCap}
+            tone="green"
+            title="Education Management"
+            subtitle="Manage your educational background"
+            chips={[`${education.length} ${education.length === 1 ? 'entry' : 'entries'}`]}
+          >
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-gradient-to-b from-green-500 to-green-600 text-white rounded-xl shadow-sm hover:from-green-600 hover:to-green-700 transition whitespace-nowrap"
+            >
+              <Plus size={16} />
+              Add Education
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap disabled:opacity-50"
+            >
+              <Save size={16} />
+              {saving ? 'Saving...' : 'Save All'}
+            </button>
+          </PageBanner>
         </div>
 
         {/* Add/Edit Form */}
@@ -201,7 +197,7 @@ export default function EducationAdmin() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mb-6"
+            className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm mb-6"
           >
             <h3 className="text-lg font-semibold text-green-600 mb-4">
               {editingId ? 'Edit Education' : 'Add New Education'}
@@ -302,7 +298,7 @@ export default function EducationAdmin() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={editingId ? () => updateEducation(editingId) : addEducation}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="px-4 py-2 bg-gradient-to-b from-green-500 to-green-600 text-white rounded-xl shadow-sm hover:from-green-600 hover:to-green-700 transition whitespace-nowrap"
                 >
                   {editingId ? 'Update' : 'Add'} Education
                 </button>
@@ -325,7 +321,7 @@ export default function EducationAdmin() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm hover:border-purple-200 hover:shadow-md transition-all"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -335,7 +331,7 @@ export default function EducationAdmin() {
                       {edu.grade}
                     </span>
                   </div>
-                  <p className="text-purple-600 font-medium">{edu.institution}</p>
+                  <p className="flex items-center gap-1.5 font-medium text-purple-700"><GraduationCap size={15} className="shrink-0 text-purple-400" aria-hidden="true" />{edu.institution}</p>
                   <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                     <span>{edu.period}</span>
                     {edu.location && <span>• {edu.location}</span>}
@@ -347,7 +343,7 @@ export default function EducationAdmin() {
                         {edu.coursework.map((course, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
+                            className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700 ring-1 ring-gray-200/70"
                           >
                             {course}
                           </span>
@@ -356,16 +352,20 @@ export default function EducationAdmin() {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="ml-4 flex items-center self-start rounded-xl border border-gray-200 bg-gray-50/70 p-0.5">
                   <button
                     onClick={() => startEdit(edu)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit"
+                    aria-label={`Edit ${edu.degree}`}
+                    className="rounded-lg p-2 text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm transition"
                   >
                     <Edit size={16} />
                   </button>
                   <button
                     onClick={() => deleteEducation(edu.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete"
+                    aria-label={`Delete ${edu.degree}`}
+                    className="rounded-lg p-2 text-gray-500 hover:text-red-600 hover:bg-white hover:shadow-sm transition"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -381,7 +381,7 @@ export default function EducationAdmin() {
               <p className="text-gray-500 mb-4">Start by adding your educational background.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-gradient-to-b from-green-500 to-green-600 text-white rounded-xl shadow-sm hover:from-green-600 hover:to-green-700 transition whitespace-nowrap"
               >
                 Add First Education
               </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Building2, Calendar, ChevronDown, MapPin } from 'lucide-react';
+import { REVEAL_EVENT } from '@/lib/dom';
 import { mediaUrl } from '@/lib/media';
 import type { Experience as Job } from '@/lib/types';
 import ExternalLink from './ExternalLink';
@@ -162,17 +163,23 @@ export default function Experience({ number }: { number: string }) {
   const current = Math.min(page, pages - 1);
   const start = current * ROLES_PER_PAGE;
 
-  // a link to one role (#experience-3) opens the page that holds it
+  // a link to one role (#experience-3, or a jump from the timeline) opens the page that holds it
   useEffect(() => {
-    const reveal = () => {
-      const match = window.location.hash.match(/^#experience-(.+)$/);
+    const reveal = (id: string) => {
+      const match = id.match(/^experience-(.+)$/);
       if (!match) return;
-      const index = items.findIndex((job) => String(job.id) === decodeURIComponent(match[1]));
+      const index = items.findIndex((job) => String(job.id) === match[1]);
       if (index >= 0) setPage(Math.floor(index / ROLES_PER_PAGE));
     };
-    reveal();
-    window.addEventListener('hashchange', reveal);
-    return () => window.removeEventListener('hashchange', reveal);
+    const onHash = () => reveal(decodeURIComponent(window.location.hash.slice(1)));
+    const onReveal = (event: Event) => reveal((event as CustomEvent<string>).detail);
+    onHash();
+    window.addEventListener('hashchange', onHash);
+    window.addEventListener(REVEAL_EVENT, onReveal);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener(REVEAL_EVENT, onReveal);
+    };
   }, [items]);
 
   const go = (target: number) => {

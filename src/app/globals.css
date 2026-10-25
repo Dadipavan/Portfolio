@@ -785,3 +785,23 @@ html[data-motion="off"] .reveal-hidden {
   font-size: 0.85rem;
   color: var(--color-subtle);
 }
+
+/* a year of the timeline opening */
+@keyframes timeline-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.timeline-open {
+  animation: timeline-open 0.22s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-open {
+    animation: none;
+  }
+}

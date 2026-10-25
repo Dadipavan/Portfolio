@@ -418,6 +418,8 @@ const otherFields = [
   },
 
   // Timeline
+  { key: 'timeline.expand', group: 'Timeline', label: 'Button: open every year', text: 'Open all years' },
+  { key: 'timeline.collapse', group: 'Timeline', label: 'Button: close every year', text: 'Close all years' },
   { key: 'timeline.all', group: 'Timeline', label: 'Filter: everything', text: 'Everything' },
   {
     key: 'timeline.dim',

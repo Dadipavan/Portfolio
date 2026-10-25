@@ -10,9 +10,11 @@ export default function HashHighlight() {
     const run = () => {
       const id = decodeURIComponent(window.location.hash.slice(1));
       if (!id) return;
-      const el = document.getElementById(id);
-      if (!el || !el.hasAttribute('data-flash')) return;
-      window.setTimeout(() => scrollAndFlash(id), 120);
+      // the item may sit on another page of its section: look for it once the section has switched pages
+      window.setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el?.hasAttribute('data-flash')) scrollAndFlash(id);
+      }, 160);
     };
     run();
     window.addEventListener('hashchange', run);

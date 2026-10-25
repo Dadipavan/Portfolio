@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Award, BadgeCheck, Download, ExternalLink as OpenIcon, FileText } from 'lucide-react';
+import { REVEAL_EVENT } from '@/lib/dom';
 import { isPdf, isPdfUrl, mediaDownloadUrl, mediaUrl } from '@/lib/media';
 import type { Certification } from '@/lib/types';
 import ExternalLink from './ExternalLink';
@@ -164,21 +165,29 @@ export default function Certifications({ number }: { number: string }) {
   const current = Math.min(page, pages - 1);
   const start = current * CERTS_PER_PAGE;
 
-  // a link to one certificate (#certification-4) opens the page that holds it
+  // a link to one certificate (#certification-4, or a jump from the timeline) opens the page that holds it
   useEffect(() => {
-    const reveal = () => {
-      const match = window.location.hash.match(/^#certification-(\d+)$/);
+    const reveal = (id: string) => {
+      const match = id.match(/^certification-(\d+)$/);
       if (match && Number(match[1]) < items.length)
         setPage(Math.floor(Number(match[1]) / CERTS_PER_PAGE));
     };
-    reveal();
-    window.addEventListener('hashchange', reveal);
-    return () => window.removeEventListener('hashchange', reveal);
+    const onHash = () => reveal(decodeURIComponent(window.location.hash.slice(1)));
+    const onReveal = (event: Event) => reveal((event as CustomEvent<string>).detail);
+    onHash();
+    window.addEventListener('hashchange', onHash);
+    window.addEventListener(REVEAL_EVENT, onReveal);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener(REVEAL_EVENT, onReveal);
+    };
   }, [items.length]);
 
   const go = (target: number) => {
     setPage(Math.min(Math.max(target, 0), pages - 1));
-    document.getElementById('certifications')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    document
+      .getElementById('certifications')
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   };
 
   const action =

@@ -19,7 +19,10 @@ export default function Pager({
 }) {
   if (pages <= 1) return null;
   return (
-    <nav aria-label={label} className="pager mt-10 flex flex-wrap items-center justify-center gap-2">
+    <nav
+      aria-label={label}
+      className="pager mt-10 flex flex-wrap items-center justify-center gap-2"
+    >
       <button
         type="button"
         className={button}

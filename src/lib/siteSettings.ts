@@ -25,7 +25,6 @@ export const SECTION_IDS: SectionId[] = [
   'education',
   'certifications',
   'achievements',
-  'moments',
   'recommendations',
   'work',
   'contact',
@@ -43,7 +42,6 @@ export const SECTION_NOTES: Record<SectionId, string> = {
   education: 'Education (needs at least one entry).',
   certifications: 'Certifications (needs at least one certification or extra line).',
   achievements: 'Achievements (needs at least one).',
-  moments: 'Moments: pictures with a few words, by year (switch it on in Appearance and add at least one in Moments).',
   recommendations: 'The recommendations wall (needs at least one recommendation).',
   work: 'The Work with me panel (switch it on in Appearance and Site settings).',
   contact: 'Contact details and the message form.',
@@ -370,12 +368,6 @@ export const FEATURES: {
     id: 'shareTools',
     label: 'Share and save tools',
     description: 'QR code, copy link and save-my-contact.',
-    group: 'Proof and hiring',
-  },
-  {
-    id: 'moments',
-    label: 'Moments (yearly pictures and popups)',
-    description: 'A strip of pictures with a few words, grouped by year, and optional popups. Off until you switch it on.',
     group: 'Proof and hiring',
   },
   {

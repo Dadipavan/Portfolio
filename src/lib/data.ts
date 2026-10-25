@@ -288,8 +288,6 @@ export const SITE_SETTINGS: SiteSettings = {
     widgets: ['kpis', 'radar', 'perYear', 'techMap', 'heatmap'],
   },
   features: {
-    // new and optional: switched on in Admin > Appearance when wanted
-    moments: false,
     roleSwitch: true,
     quickView: true,
     explorer: true,

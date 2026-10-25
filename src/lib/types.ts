@@ -241,13 +241,11 @@ export type SectionId =
   | 'education'
   | 'certifications'
   | 'achievements'
-  | 'moments'
   | 'recommendations'
   | 'work'
   | 'contact';
 
 export type FeatureId =
-  | 'moments'
   | 'roleSwitch'
   | 'quickView'
   | 'explorer'
@@ -345,39 +343,6 @@ export interface SiteSettings {
   highlights: Highlight[];
 }
 
-// A moment: a picture with a few words, shown on a strip grouped by year and, if wanted, as a popup.
-export type MomentFrequency = 'once' | 'session' | 'daily';
-
-export interface MomentPopup {
-  enabled: boolean;
-  // the days the popup may appear (YYYY-MM-DD, local time of the visitor); empty = no limit on that side
-  start: string;
-  end: string;
-  // seconds after the page opened
-  delay: number;
-  // once = one time on each device, session = once per visit, daily = at most once a day
-  frequency: MomentFrequency;
-}
-
-export interface Moment {
-  id: string | number;
-  title: string;
-  // a few words, shown on hover and in the popup
-  text: string;
-  // the year it belongs to on the strip ("2026"); taken from the date when empty
-  year: string;
-  image?: MediaFile;
-  imageAlt?: string;
-  link?: ProfileLink;
-  // show on the yearly strip
-  strip: boolean;
-  popup: MomentPopup;
-  // false keeps it off the site (a draft); missing means published
-  published?: boolean;
-  // changes every time it is saved, so an edited popup is shown again to people who closed the old one
-  updatedAt?: string;
-}
-
 export interface PortfolioContent {
   personalInfo: PersonalInfo;
   technicalSkills: SkillCategory[];
@@ -386,7 +351,6 @@ export interface PortfolioContent {
   education: Education[];
   certifications: Certification[];
   achievements: Achievement[];
-  moments: Moment[];
   currentFocus: FocusArea[];
   recommendations: Recommendation[];
   quickFacts?: Record<string, string>;

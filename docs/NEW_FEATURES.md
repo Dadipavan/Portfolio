@@ -359,16 +359,3 @@ The **Build resume** button has two ways in:
 Either way, **every part of the resume is editable on the left** and only changes this resume, never your portfolio: header (name, headline, contact details, links), summary, skills groups and each skill, every job, project and education entry (title, dates, second line, bullets: reword, tick, move, remove, add), certifications, achievements, the heading of every section, the order of the sections, and your own extra sections. The preview on the right is the exact PDF, with ATS checks above it.
 
 *Download PDF*, or *Save to my resumes* (private until you make it public). Resumes made here have a wand button to reopen them with all your edits. The PDF is one column of real text in Helvetica with standard headings, so ATS software can read it. No Supabase change is needed.
-
----
-
-## 10. Moments (Admin > Moments): pictures by year and optional popups
-
-An optional feature, **off until you switch it on** (Admin > Appearance > Other features > Moments).
-
-- Add moments in Admin > Moments: title, a few words, year, a picture, an optional link.
-- On the site they appear in a **Moments** section grouped by year, newest first. Hover a picture (or tap it on a phone) to read the words; select it to open it larger.
-- A moment can also open as a **popup**. It is designed not to annoy: at most one popup per visit, only inside the days you choose (optional), never over another window, and by default **once on each device** (choices: once on each device, once on each visit, at most once a day). Editing a moment shows it once more to people who closed the old version. If a visitor's browser blocks storage, no popup is shown.
-- Pictures are uploaded like the other pictures (private storage, 4 MB, checked on the server) and shown only while the moment is published and the feature is on.
-
-**To remove the feature completely:** it was added in a single separate commit, so `git revert <that commit>` takes out all of the code (the admin page, the section, the popup, the wording, the help topics). Data you saved stays harmlessly in the `moments` row of `portfolio_data` and in the `moments/` folder of the `portfolio-files` bucket; delete them in Supabase if you want them gone. To only hide it, switch it off in Appearance: nothing is shown and nothing is lost.

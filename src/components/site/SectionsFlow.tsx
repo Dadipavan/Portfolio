@@ -14,7 +14,6 @@ import SkillsBrowser from './SkillsBrowser';
 import TimelineSection from './TimelineSection';
 import WorkWithMe from './WorkWithMe';
 import Insights from './blocks/Insights';
-import Moments from './Moments';
 import { usePortfolio } from './PortfolioProvider';
 
 interface SectionsFlowProps {
@@ -58,9 +57,6 @@ export default function SectionsFlow({ before }: SectionsFlowProps) {
             break;
           case 'achievements':
             node = <Achievements number={number} />;
-            break;
-          case 'moments':
-            node = <Moments number={number} />;
             break;
           case 'recommendations':
             node = <Recommendations number={number} />;

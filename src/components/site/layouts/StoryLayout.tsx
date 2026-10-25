@@ -49,7 +49,7 @@ const CHAPTERS: {
     stage: 'Deploy',
     title: 'Putting it to work',
     blurb: 'Roles, recognition, and how to work together.',
-    sections: ['experience', 'achievements', 'moments', 'recommendations', 'work', 'contact'],
+    sections: ['experience', 'achievements', 'recommendations', 'work', 'contact'],
   },
 ];
 

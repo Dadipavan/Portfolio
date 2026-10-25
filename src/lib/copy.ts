@@ -79,13 +79,6 @@ const SECTION_TEXTS = [
       'Recognition for academic excellence, leadership, and contributions to the tech community.',
   },
   {
-    id: 'moments',
-    group: 'Moments',
-    label: 'Moments',
-    title: 'Moments that mattered',
-    intro: 'A few highlights from the years so far. Hover a picture, or tap it, to read more.',
-  },
-  {
     id: 'recommendations',
     group: 'Recommendations',
     label: 'Recommendations',
@@ -133,9 +126,6 @@ const sectionFields = SECTION_TEXTS.flatMap((s) => [
 ]);
 
 const otherFields = [
-  // Moments
-  { key: 'moments.open', group: 'Moments', label: 'Open a moment: button', text: 'Read more' },
-
   // Hero
   {
     key: 'hero.greeting',

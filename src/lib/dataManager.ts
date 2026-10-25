@@ -13,7 +13,7 @@ import {
 } from './data';
 import { mergeSiteSettings } from './siteSettings';
 import type { ResumeRecipe } from './resume/recipe';
-import type { Achievement, Certification, Moment, PersonalInfo, Project, Recommendation, SiteSettings } from './types';
+import type { Achievement, Certification, PersonalInfo, Project, Recommendation, SiteSettings } from './types';
 
 export interface Resume {
   id: string;
@@ -41,7 +41,6 @@ export interface PortfolioData {
   education: typeof EDUCATION;
   certifications: Certification[];
   achievements: Achievement[];
-  moments?: Moment[];
   quickFacts: Record<string, string>;
   currentFocus: typeof CURRENT_FOCUS;
   siteSettings?: SiteSettings;

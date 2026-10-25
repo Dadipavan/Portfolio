@@ -14,7 +14,6 @@ import SpotlightLayout from './layouts/SpotlightLayout';
 import StoryLayout from './layouts/StoryLayout';
 import TerminalLayout from './layouts/TerminalLayout';
 import type { LayoutId } from '@/lib/types';
-import MomentPopup from './MomentPopup';
 import { usePortfolio } from './PortfolioProvider';
 
 // Every look the admin can choose in Admin > Appearance. All of them show the same content and the same features;
@@ -44,7 +43,6 @@ export default function SiteShell() {
   return (
     <div data-layout={layout} data-accent={accent}>
       <Layout />
-      <MomentPopup />
     </div>
   );
 }

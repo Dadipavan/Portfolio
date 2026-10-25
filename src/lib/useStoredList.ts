@@ -8,7 +8,7 @@ import { getPortfolioDataForEditing, updatePortfolioSection, type PortfolioData 
 import type { SiteSettings } from './types';
 import { mergeSiteSettings } from './siteSettings';
 
-export type ListSection = 'projects' | 'certifications' | 'achievements' | 'moments';
+export type ListSection = 'projects' | 'certifications' | 'achievements';
 
 type Stored = Record<string, unknown>;
 

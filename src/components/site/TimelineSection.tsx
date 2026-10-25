@@ -9,6 +9,9 @@ import type { TimelineItem, TimelineType } from '@/lib/timeline';
 import Section from './Section';
 import { usePortfolio } from './PortfolioProvider';
 
+// entries shown when a year is opened, and added by each "Load more"
+const YEAR_PAGE = 3;
+
 const TYPES: {
   id: TimelineType;
   // the section whose name is used as the label; milestones added by hand have no section
@@ -66,11 +69,9 @@ export default function TimelineSection({ number }: { number: string }) {
   const { model, role, t } = usePortfolio();
   const { roles } = model;
   const [type, setType] = useState<TimelineType | 'all'>('all');
-  // the years that are open: only the newest one at first
-  const [openYears, setOpenYears] = useState<Set<number>>(
-    () =>
-      new Set(model.timeline.length ? [Math.max(...model.timeline.map((i) => i.startYear))] : [])
-  );
+  // every year starts closed; opening one shows its first few entries, "Load more" adds more
+  const [openYears, setOpenYears] = useState<Set<number>>(() => new Set());
+  const [loaded, setLoaded] = useState<Record<number, number>>({});
 
   const items = useMemo(
     () => model.timeline.filter((item) => type === 'all' || item.type === type),
@@ -84,14 +85,7 @@ export default function TimelineSection({ number }: { number: string }) {
     return Array.from(byYear.entries()).sort((a, b) => b[0] - a[0]);
   }, [items]);
 
-  // switching the filter opens the newest year of what is left, so the list is never all closed
-  const showType = (next: TimelineType | 'all') => {
-    setType(next);
-    const years = model.timeline
-      .filter((item) => next === 'all' || item.type === next)
-      .map((item) => item.startYear);
-    if (years.length) setOpenYears(new Set([Math.max(...years)]));
-  };
+  const showType = (next: TimelineType | 'all') => setType(next);
 
   const toggleYear = (year: number) =>
     setOpenYears((current) => {
@@ -221,7 +215,7 @@ export default function TimelineSection({ number }: { number: string }) {
                 hidden={!isOpen}
                 className="timeline-open mt-3 space-y-3 pl-6 sm:col-start-2 sm:pl-9"
               >
-                {yearItems.map((item) => {
+                {(isOpen ? yearItems.slice(0, loaded[year] ?? YEAR_PAGE) : []).map((item) => {
                   const kind = TYPES.find((entry) => entry.id === item.type)!;
                   const Icon = kind.icon;
                   const dim = !matchesRole(item);
@@ -248,6 +242,22 @@ export default function TimelineSection({ number }: { number: string }) {
                   );
                 })}
               </ul>
+              {isOpen && yearItems.length > (loaded[year] ?? YEAR_PAGE) && (
+                <div className="mt-3 pl-6 sm:col-start-2 sm:pl-9">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() =>
+                      setLoaded((current) => ({
+                        ...current,
+                        [year]: (current[year] ?? YEAR_PAGE) + YEAR_PAGE,
+                      }))
+                    }
+                  >
+                    Load more ({yearItems.length - (loaded[year] ?? YEAR_PAGE)} left)
+                  </button>
+                </div>
+              )}
             </li>
           );
         })}

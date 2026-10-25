@@ -6,11 +6,12 @@ import { Save, User, Plus, X, Edit, Trash2, MapPin, Award } from 'lucide-react';
 import { getPortfolioDataForEditing, savePersonalPatch, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
+import { PageBanner } from '@/components/admin/kit';
 import { useDraftSync } from '@/lib/previewBus';
 import type { PersonalInfo, ProfileLink } from '@/lib/types';
 
-const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
-const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
+const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
+const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 interface CurrentFocusItem {
@@ -217,22 +218,22 @@ export default function PersonalInfoAdmin() {
     <AdminLayout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <User className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Personal Information</h1>
-                <p className="text-gray-600">Update your basic information and contact details</p>
-              </div>
-            </div>
+        <div className="mb-6">
+          <PageBanner
+            icon={User}
+            title="Personal Information"
+            subtitle="Update your basic information and contact details"
+            chips={[
+              personalInfo.name || 'No name yet',
+              personalInfo.email ? 'Email added' : 'No email yet',
+              personalInfo.phone ? 'Phone added' : 'No phone yet',
+            ]}
+          >
             {process.env.NODE_ENV === 'production' && (
               <button
                 onClick={syncFromCloud}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition text-sm font-semibold disabled:opacity-50"
                 title="Sync data from cloud storage"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,19 +242,19 @@ export default function PersonalInfoAdmin() {
                 Sync from Cloud
               </button>
             )}
-          </div>
+          </PageBanner>
         </div>
 
         {/* Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm"
+          className=""
         >
-          <form onSubmit={handleSave} className="space-y-8">
+          <form onSubmit={handleSave} className="space-y-6">
           {/* Basic Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Basic Information</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Basic Information</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className={labelStyles}>Full Name *</label>
@@ -280,8 +281,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Professional Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Professional Information</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Professional Information</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className={labelStyles}>Title/Position *</label>
@@ -308,8 +309,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Content Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Content Information</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Content Information</h3>
             <div className="space-y-6">
               <div>
                 <label className={labelStyles}>Main Description *</label>
@@ -339,8 +340,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Contact Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Contact Information</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Contact Information</h3>
             <div className="space-y-4">
               <div>
                 <label className={labelStyles}>Location *</label>
@@ -379,8 +380,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Social Links */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Social Links</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Social Links</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className={labelStyles}>GitHub URL</label>
@@ -454,8 +455,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Academic Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4">Academic Information</h3>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4">Academic Information</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className={labelStyles}>Current CGPA</label>
@@ -481,8 +482,8 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Quick Facts Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-4 flex items-center gap-2">
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2 mb-4 flex items-center gap-2">
               <MapPin size={20} />
               Quick Facts (Homepage Display)
             </h3>
@@ -580,9 +581,9 @@ export default function PersonalInfoAdmin() {
           </div>
 
           {/* Current Focus Section */}
-          <div>
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-purple-600 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 before:h-4 before:w-1 before:rounded-full before:bg-purple-500 before:content-[''] flex items-center gap-2">
                 <Award size={20} />
                 Current Focus Areas (Homepage Display)
               </h3>
@@ -773,7 +774,7 @@ export default function PersonalInfoAdmin() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-200">
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm">
             <div className="flex justify-end gap-4">
               <a
                 href="/admin"
@@ -784,7 +785,7 @@ export default function PersonalInfoAdmin() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition disabled:opacity-50 font-semibold shadow-sm shadow-purple-600/25"
               >
                 <Save size={16} />
                 {saving ? 'Saving...' : 'Save Changes'}

@@ -1,8 +1,8 @@
 // One timeline from education, experience, certifications and projects.
 import { RoleSet } from './roles';
-import type { PortfolioContent, TrackId } from './types';
+import type { PortfolioContent, TimelineEdits, TrackId } from './types';
 
-export type TimelineType = 'education' | 'experience' | 'certification' | 'project';
+export type TimelineType = 'education' | 'experience' | 'certification' | 'project' | 'milestone';
 
 export interface TimelineItem {
   id: string; // doubles as the anchor id of the item on the page
@@ -16,6 +16,8 @@ export interface TimelineItem {
   ongoing: boolean;
   tracks: TrackId[];
   skills: string[];
+  // a milestone added in the admin can link somewhere
+  href?: string;
 }
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -58,7 +60,8 @@ export function parsePeriod(text: string): ParsedPeriod | null {
   };
 }
 
-export function buildTimeline(content: PortfolioContent): TimelineItem[] {
+// Everything the content produces, before the admin's edits and in no particular order
+export function collectTimeline(content: PortfolioContent): TimelineItem[] {
   const roles = new RoleSet(content.siteSettings.roles);
   const items: TimelineItem[] = [];
 
@@ -130,8 +133,18 @@ export function buildTimeline(content: PortfolioContent): TimelineItem[] {
     });
   });
 
-  // newest first; within a year, later months first; ties keep a stable order by type
-  const order: TimelineType[] = ['experience', 'education', 'project', 'certification'];
+  return items;
+}
+
+// Newest first; within a year, later months first; ties keep a stable order by type
+export function sortTimeline(items: TimelineItem[]): TimelineItem[] {
+  const order: TimelineType[] = [
+    'experience',
+    'education',
+    'project',
+    'certification',
+    'milestone',
+  ];
   return items
     .map((item, position) => ({ item, position }))
     .sort(
@@ -143,4 +156,48 @@ export function buildTimeline(content: PortfolioContent): TimelineItem[] {
         a.position - b.position
     )
     .map((entry) => entry.item);
+}
+
+// The admin's choices: entries left out, entries reworded or moved to another year, and milestones of their own
+export function applyTimelineEdits(items: TimelineItem[], edits: TimelineEdits): TimelineItem[] {
+  const hidden = new Set(edits.hidden);
+  const shown = items
+    .filter((item) => !hidden.has(item.id))
+    .map((item) => {
+      const change = edits.overrides[item.id];
+      if (!change) return item;
+      return {
+        ...item,
+        title: change.title || item.title,
+        subtitle: change.subtitle ?? item.subtitle,
+        ...(change.year
+          ? {
+              startYear: change.year,
+              startMonth: undefined,
+              endYear: undefined,
+              ongoing: false,
+              label: String(change.year),
+            }
+          : {}),
+      };
+    });
+  const own = edits.custom.map<TimelineItem>((milestone) => ({
+    id: `milestone-${milestone.id}`,
+    type: 'milestone',
+    title: milestone.title,
+    subtitle: milestone.subtitle,
+    label: String(milestone.year),
+    startYear: milestone.year,
+    ongoing: false,
+    tracks: [],
+    skills: [],
+    ...(milestone.url ? { href: milestone.url } : {}),
+  }));
+  return [...shown, ...own];
+}
+
+export function buildTimeline(content: PortfolioContent): TimelineItem[] {
+  return sortTimeline(
+    applyTimelineEdits(collectTimeline(content), content.siteSettings.timelineEdits)
+  );
 }

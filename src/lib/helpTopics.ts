@@ -52,6 +52,7 @@ const A = {
   achievements: '/admin/achievements',
   recommendations: '/admin/recommendations',
   site: '/admin/site',
+  timeline: '/admin/timeline',
   appearance: '/admin/appearance',
   text: '/admin/text',
   resumes: '/admin/resumes',
@@ -69,7 +70,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#top',
     from: 'Personal Info: name, short name, title, subtitle and description.',
     steps: [
-      { text: 'Open Personal Info and change the Basic and Professional information.', href: A.personal },
+      {
+        text: 'Open Personal Info and change the Basic and Professional information.',
+        href: A.personal,
+      },
       { text: 'The greeting and button wording is in Text and labels.', href: A.text },
     ],
     textKeys: ['hero.greeting', 'hero.viewProjects', 'hero.summaryButton'],
@@ -84,7 +88,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     from: 'Profile photo and media: the uploaded picture and how it is cropped.',
     steps: [
       { text: 'Upload, replace, crop or remove the photo.', href: A.profile },
-      { text: 'Only some looks show a photo. Pick one that does under Appearance > Look.', href: A.appearance },
+      {
+        text: 'Only some looks show a photo. Pick one that does under Appearance > Look.',
+        href: A.appearance,
+      },
     ],
     words: ['picture', 'avatar', 'portrait', 'image'],
   },
@@ -97,7 +104,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     from: 'Roles: each role has a name, a job title, a colour, an icon and keywords. Projects and skills are counted by matching those keywords.',
     steps: [
       { text: 'Add, rename, remove or recolour a role.', href: A.roles },
-      { text: 'To force a project into a role, tick the role on that project (Technologies, tools and roles).', href: A.projects },
+      {
+        text: 'To force a project into a role, tick the role on that project (Technologies, tools and roles).',
+        href: A.projects,
+      },
       { text: 'Switch the role switch or the pipeline look on and off.', href: A.appearance },
     ],
     textKeys: ['hero.viewAs', 'hero.viewingAs', 'hero.rolesHeading'],
@@ -179,7 +189,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#insights',
     from: 'The Technologies field of each project. The rows are your most-used technologies (up to 14); the columns are your projects. Spelling differences such as "Power BI" and "PowerBI" count as one.',
     steps: [
-      { text: 'To add a technology to the grid, open a project and add it under Technologies, tools and roles > Technologies. (The "Other tools" field is not used here.)', href: A.projects },
+      {
+        text: 'To add a technology to the grid, open a project and add it under Technologies, tools and roles > Technologies. (The "Other tools" field is not used here.)',
+        href: A.projects,
+      },
       { text: 'A technology that is used by more projects ranks higher and appears first.' },
       { text: 'To change the heading or the sentence under it, edit the wording.', href: A.text },
       { text: 'Show, hide or reorder this chart under Appearance > Charts.', href: A.appearance },
@@ -193,10 +206,16 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Technology map',
     seen: 'Bubbles. "Colour shows the role; a number shows how many projects use it. Select one to filter the projects."',
     anchor: '/#insights',
-    from: 'The Technologies of your projects (up to 40). A bubble\'s number is how many projects use it. Its colour is the role it belongs to: a technology named in only one role\'s keywords takes that role; a general tool such as Python takes the role whose projects use it most.',
+    from: "The Technologies of your projects (up to 40). A bubble's number is how many projects use it. Its colour is the role it belongs to: a technology named in only one role's keywords takes that role; a general tool such as Python takes the role whose projects use it most.",
     steps: [
-      { text: 'Add a technology: open a project and add it under Technologies. A new bubble appears.', href: A.projects },
-      { text: 'Change a bubble\'s colour: tick the role on the project, or edit the role keywords.', href: A.roles },
+      {
+        text: 'Add a technology: open a project and add it under Technologies. A new bubble appears.',
+        href: A.projects,
+      },
+      {
+        text: "Change a bubble's colour: tick the role on the project, or edit the role keywords.",
+        href: A.roles,
+      },
       { text: 'Change the heading or the sentence under it.', href: A.text },
       { text: 'Show, hide or reorder the chart.', href: A.appearance },
     ],
@@ -211,7 +230,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#insights',
     from: 'For each role: the number of your skills that match its keywords and the number of projects that belong to it.',
     steps: [
-      { text: 'Change which skills count for a role with its Keywords and Extra keywords.', href: A.roles },
+      {
+        text: 'Change which skills count for a role with its Keywords and Extra keywords.',
+        href: A.roles,
+      },
       { text: 'Add skills.', href: A.skills },
       { text: 'Add projects, or set their roles.', href: A.projects },
       { text: 'Edit the wording.', href: A.text },
@@ -227,7 +249,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#insights',
     from: 'The Year of each project.',
     steps: [
-      { text: 'Set the year in the project\'s Basics tab.', href: A.projects },
+      { text: "Set the year in the project's Basics tab.", href: A.projects },
       { text: 'Edit the wording.', href: A.text },
     ],
     textKeys: ['chart.year.title', 'chart.year.help'],
@@ -256,10 +278,16 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Project cards',
     seen: 'The grid of projects with title, short description, technologies and buttons.',
     anchor: '/#projects',
-    from: 'Projects: each project\'s title, subtitle, description, technologies, links, year and picture.',
+    from: "Projects: each project's title, subtitle, description, technologies, links, year and picture.",
     steps: [
-      { text: 'Add or edit a project. Use the move buttons to change the order.', href: A.projects },
-      { text: 'A project marked "Visible on my site" off is a draft and visitors never see it.', href: A.projects },
+      {
+        text: 'Add or edit a project. Use the move buttons to change the order.',
+        href: A.projects,
+      },
+      {
+        text: 'A project marked "Visible on my site" off is a draft and visitors never see it.',
+        href: A.projects,
+      },
       { text: 'Rename the buttons.', href: A.text },
     ],
     textKeys: ['projects.code', 'projects.live', 'projects.caseStudy', 'projects.featuredBadge'],
@@ -312,11 +340,14 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Technical skills',
     seen: 'Skills grouped by category, with tabs for each role.',
     anchor: '/#skills',
-    from: 'Skills: categories and the skills in each one. Which skills show under a role tab comes from that role\'s keywords.',
+    from: "Skills: categories and the skills in each one. Which skills show under a role tab comes from that role's keywords.",
     steps: [
       { text: 'Add, rename, reorder or remove categories and skills.', href: A.skills },
       { text: 'Choose which skills belong to a role.', href: A.roles },
-      { text: 'Click-through to projects and certificates is the Skill and tag explorer under Other features.', href: A.appearance },
+      {
+        text: 'Click-through to projects and certificates is the Skill and tag explorer under Other features.',
+        href: A.appearance,
+      },
     ],
     textKeys: ['skills.all', 'skills.hintExplorer'],
     words: ['categories', 'tags', 'explorer'],
@@ -340,7 +371,9 @@ export const HELP_TOPICS: HelpTopic[] = [
     seen: 'Your degrees and schools with grade and coursework.',
     anchor: '/#education',
     from: 'Education: institution, degree, dates, grade and coursework.',
-    steps: [{ text: 'Edit entries. The first one is also used in the facts strip.', href: A.education }],
+    steps: [
+      { text: 'Edit entries. The first one is also used in the facts strip.', href: A.education },
+    ],
     textKeys: ['education.coursework'],
     words: ['college', 'school', 'degree', 'cgpa'],
   },
@@ -348,14 +381,22 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: 'timeline',
     area: 'Experience and education',
     title: 'Career timeline',
-    seen: 'One timeline with education, experience, certificates and projects, with filters.',
+    seen: 'Year rows you press to open, with education, experience, certificates, projects and your own milestones, with filters.',
     anchor: '/#timeline',
-    from: 'Built automatically from Education, Experience, Certificates and Projects. There is nothing to type for it.',
+    from: 'Built from Education, Experience, Certificates and Projects, then changed by what you set in Admin > Timeline.',
     steps: [
-      { text: 'Change the entries on their own pages. The dates you type decide the order.', href: A.experience },
+      {
+        text: 'Open Timeline to hide an entry, reword it or move it to another year (only in the timeline), and add milestones of your own.',
+        href: A.timeline,
+      },
+      {
+        text: 'Change the entries themselves on their own pages. The dates you type decide the order.',
+        href: A.experience,
+      },
       { text: 'Switch the timeline on or off.', href: A.appearance },
     ],
-    textKeys: ['timeline.all'],
+    textKeys: ['timeline.all', 'timeline.expand', 'timeline.collapse'],
+    words: ['milestone', 'year', 'hide', 'path'],
   },
 
   // ---------------------------------------------------------------- proof and contact
@@ -367,7 +408,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#certifications',
     from: 'Certificates: title, issuer, date, credential ID, verification link, skills and the uploaded picture or PDF.',
     steps: [
-      { text: 'Add or edit a certificate. A certificate set to hidden is not shown.', href: A.certificates },
+      {
+        text: 'Add or edit a certificate. A certificate set to hidden is not shown.',
+        href: A.certificates,
+      },
       { text: 'Extra, text-only certifications can be added in Site settings.', href: A.site },
     ],
     textKeys: ['certs.verify', 'certs.view'],
@@ -391,7 +435,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#recommendations',
     from: 'Recommendations. The section only appears when you have added at least one.',
     steps: [
-      { text: 'Add quotes with the person\'s name, role and relation.', href: A.recommendations },
+      { text: "Add quotes with the person's name, role and relation.", href: A.recommendations },
       { text: 'Switch the wall on or off.', href: A.appearance },
     ],
     textKeys: ['recs.link'],
@@ -405,7 +449,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#work',
     from: 'Site settings > Work with me.',
     steps: [
-      { text: 'Fill in the roles, location, remote, start date, contact and booking link.', href: A.site },
+      {
+        text: 'Fill in the roles, location, remote, start date, contact and booking link.',
+        href: A.site,
+      },
       { text: 'Rename the buttons.', href: A.text },
     ],
     textKeys: ['work.roles', 'work.book', 'work.message'],
@@ -446,9 +493,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'The look, colours and animations',
     seen: 'Everything about how the whole site is laid out and coloured.',
     from: 'Appearance: Look, Colours (light, dark, accent), Animations and the Data-enthusiast style.',
-    steps: [
-      { text: 'Choose one of the looks and preview it before saving.', href: A.appearance },
-    ],
+    steps: [{ text: 'Choose one of the looks and preview it before saving.', href: A.appearance }],
     words: ['theme', 'template', 'dark mode', 'accent', 'layout'],
   },
   {
@@ -469,7 +514,12 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Any heading, button or line of wording',
     seen: 'Every piece of text that is not your own content.',
     from: 'Text and labels. Use its search box to find a text.',
-    steps: [{ text: 'Search for the words you see on the site, then edit them. Clear the box to go back to the original.', href: A.text }],
+    steps: [
+      {
+        text: 'Search for the words you see on the site, then edit them. Clear the box to go back to the original.',
+        href: A.text,
+      },
+    ],
     words: ['label', 'heading', 'button', 'rename', 'translate'],
   },
   {
@@ -480,7 +530,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     from: 'Counted from visits and clicks, with no personal data.',
     steps: [
       { text: 'Open Insights.', href: A.insights },
-      { text: 'Counting is switched on under Appearance > Other features > Visitor insights.', href: A.appearance },
+      {
+        text: 'Counting is switched on under Appearance > Other features > Visitor insights.',
+        href: A.appearance,
+      },
     ],
     words: ['analytics', 'views', 'visitors'],
   },
@@ -494,7 +547,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     anchor: '/#top',
     from: 'Resumes: only resumes marked Public are offered. Each can be set for a role or for any role.',
     steps: [
-      { text: 'Upload a resume, or build one, then click Private to make it Public.', href: A.resumes },
+      {
+        text: 'Upload a resume, or build one, then click Private to make it Public.',
+        href: A.resumes,
+      },
       { text: 'Choose the role each resume is offered for.', href: A.resumes },
     ],
     words: ['cv', 'download', 'pdf', 'public'],
@@ -506,15 +562,21 @@ export const HELP_TOPICS: HelpTopic[] = [
     seen: 'Nothing on the public site: this makes the PDF you send to employers.',
     from: 'Your own portfolio content, picked and edited per resume. Your portfolio is never changed.',
     steps: [
-      { text: 'Use Build resume: "Build my own" to tick what to include, or "Build from a job description" to get recommendations.', href: A.resumes },
-      { text: 'Edit every part on the left, check the preview and the ATS checks, then download or save it.' },
+      {
+        text: 'Use Build resume: "Build my own" to tick what to include, or "Build from a job description" to get recommendations.',
+        href: A.resumes,
+      },
+      {
+        text: 'Edit every part on the left, check the preview and the ATS checks, then download or save it.',
+      },
     ],
     words: ['ats', 'job description', 'jd', 'keywords', 'build'],
   },
 ];
 
 // How to upload each kind of file, and where it shows afterwards
-const FILE_RULES = 'Pictures: JPEG, PNG, WebP or GIF; PDFs for documents. Up to 4 MB each. The type is checked from the file itself, so renaming a file does not work.';
+const FILE_RULES =
+  'Pictures: JPEG, PNG, WebP or GIF; PDFs for documents. Up to 4 MB each. The type is checked from the file itself, so renaming a file does not work.';
 
 HELP_TOPICS.push(
   {
@@ -525,9 +587,17 @@ HELP_TOPICS.push(
     anchor: '/#top',
     from: 'Stored privately in the portfolio-files bucket and shown through a short-lived link.',
     steps: [
-      { text: 'Open Profile photo and media, click Upload, choose a picture. ' + FILE_RULES, href: A.profile },
-      { text: 'Move the sliders to crop and zoom, check the shapes, add alt text, then Save. It shows on the site only after you save.' },
-      { text: 'If no photo appears, your chosen look has no photo layout. Pick another under Appearance > Look.', href: A.appearance },
+      {
+        text: 'Open Profile photo and media, click Upload, choose a picture. ' + FILE_RULES,
+        href: A.profile,
+      },
+      {
+        text: 'Move the sliders to crop and zoom, check the shapes, add alt text, then Save. It shows on the site only after you save.',
+      },
+      {
+        text: 'If no photo appears, your chosen look has no photo layout. Pick another under Appearance > Look.',
+        href: A.appearance,
+      },
     ],
     words: ['upload', 'picture', 'image', 'crop'],
   },
@@ -539,9 +609,18 @@ HELP_TOPICS.push(
     anchor: '/#projects',
     from: 'Stored privately; shown only while the project is published.',
     steps: [
-      { text: 'Open the project, go to the Case study tab > Pictures, screenshots, charts and diagrams, and upload. ' + FILE_RULES, href: A.projects },
-      { text: 'Mark each one as screenshot, dashboard, chart, diagram or photo and add a caption.' },
-      { text: 'Save as draft to keep it private, or Save and publish to show it. A picture that is still used cannot be deleted by mistake.' },
+      {
+        text:
+          'Open the project, go to the Case study tab > Pictures, screenshots, charts and diagrams, and upload. ' +
+          FILE_RULES,
+        href: A.projects,
+      },
+      {
+        text: 'Mark each one as screenshot, dashboard, chart, diagram or photo and add a caption.',
+      },
+      {
+        text: 'Save as draft to keep it private, or Save and publish to show it. A picture that is still used cannot be deleted by mistake.',
+      },
     ],
     words: ['upload', 'screenshot', 'dashboard', 'image', 'gallery'],
   },
@@ -553,8 +632,15 @@ HELP_TOPICS.push(
     anchor: '/#certifications',
     from: 'Stored privately; shown only for certificates that are set to show.',
     steps: [
-      { text: 'Open Certificates, add or edit one, and upload under "The certificate itself". ' + FILE_RULES, href: A.certificates },
-      { text: 'Add the verification link and the skills it covers, then save. Hidden certificates and their files are not served.' },
+      {
+        text:
+          'Open Certificates, add or edit one, and upload under "The certificate itself". ' +
+          FILE_RULES,
+        href: A.certificates,
+      },
+      {
+        text: 'Add the verification link and the skills it covers, then save. Hidden certificates and their files are not served.',
+      },
     ],
     words: ['upload', 'pdf', 'credential'],
   },
@@ -562,11 +648,16 @@ HELP_TOPICS.push(
     id: 'upload-achievement',
     area: 'Uploading files',
     title: 'Upload achievement photos and documents',
-    seen: 'The pictures and files in the achievement\'s detail window.',
+    seen: "The pictures and files in the achievement's detail window.",
     anchor: '/#achievements',
     from: 'Stored privately; shown only for published achievements.',
     steps: [
-      { text: 'Open Achievements, add or edit one and upload under "Photos and documents". ' + FILE_RULES, href: A.achievements },
+      {
+        text:
+          'Open Achievements, add or edit one and upload under "Photos and documents". ' +
+          FILE_RULES,
+        href: A.achievements,
+      },
       { text: 'Publish it. A draft and its files stay private.' },
     ],
     words: ['upload', 'photos', 'documents'],
@@ -579,8 +670,13 @@ HELP_TOPICS.push(
     anchor: '/#top',
     from: 'Stored in the resumes bucket. PDF, DOC, DOCX or TXT, up to 10 MB.',
     steps: [
-      { text: 'Open Resumes > Upload resume, name it, describe it and choose the file.', href: A.resumes },
-      { text: 'It starts Private. Click Private to make it Public, and pick the role it is offered for.' },
+      {
+        text: 'Open Resumes > Upload resume, name it, describe it and choose the file.',
+        href: A.resumes,
+      },
+      {
+        text: 'It starts Private. Click Private to make it Public, and pick the role it is offered for.',
+      },
       { text: 'Download in the list to check it. Delete removes the file and the record.' },
     ],
     words: ['upload', 'cv', 'pdf', 'public', 'private'],
@@ -592,8 +688,13 @@ HELP_TOPICS.push(
     seen: 'It joins your resume list like an uploaded one.',
     from: 'The builder writes the PDF and stores it in the resumes bucket for you.',
     steps: [
-      { text: 'Build resume > Build my own or From a job description, edit it, then Save to my resumes. Download PDF saves it to your computer only.', href: A.resumes },
-      { text: 'It is Private until you click Private to make it Public. The wand button reopens it with your edits.' },
+      {
+        text: 'Build resume > Build my own or From a job description, edit it, then Save to my resumes. Download PDF saves it to your computer only.',
+        href: A.resumes,
+      },
+      {
+        text: 'It is Private until you click Private to make it Public. The wand button reopens it with your edits.',
+      },
     ],
     words: ['save', 'builder', 'ats'],
   },
@@ -604,10 +705,14 @@ HELP_TOPICS.push(
     seen: 'An error message when you upload.',
     from: 'The private portfolio-files bucket must exist in Supabase; files are checked on the server.',
     steps: [
-      { text: 'Run database/storage_portfolio_files.sql once in the Supabase SQL Editor to create the bucket.' },
-      { text: 'Check size (4 MB, 10 MB for resumes) and type. SVG and scripts are refused. Large photos are shrunk in your browser first.' },
+      {
+        text: 'Run database/storage_portfolio_files.sql once in the Supabase SQL Editor to create the bucket.',
+      },
+      {
+        text: 'Check size (4 MB, 10 MB for resumes) and type. SVG and scripts are refused. Large photos are shrunk in your browser first.',
+      },
       { text: 'Still stuck? Resumes > Test checks the database and storage.', href: A.resumes },
     ],
     words: ['error', 'storage', 'bucket', 'refused', 'too large'],
-  },
+  }
 );

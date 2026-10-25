@@ -23,6 +23,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  History,
   Palette,
   Quote,
   Settings,
@@ -50,6 +51,7 @@ const menuGroups = [
       { title: 'Roles', href: '/admin/roles', icon: Compass },
       { title: 'Text and labels', href: '/admin/text', icon: Type },
       { title: 'Site settings', href: '/admin/site', icon: SlidersHorizontal },
+      { title: 'Timeline', href: '/admin/timeline', icon: History },
     ],
   },
   {

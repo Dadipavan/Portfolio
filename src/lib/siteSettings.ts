@@ -11,6 +11,7 @@ import type {
   SectionId,
   SiteSettings,
   ThemeMode,
+  TimelineEdits,
   WidgetId,
 } from './types';
 
@@ -192,7 +193,8 @@ export const LAYOUTS: LayoutInfo[] = [
     ownColours: true,
     menu: 'Floating dock at the bottom',
     typeface: 'Outfit (a friendly rounded sans-serif)',
-    bestFor: 'A modern, friendly look for product, UX and generalist profiles. Feels like an app on phones.',
+    bestFor:
+      'A modern, friendly look for product, UX and generalist profiles. Feels like an app on phones.',
   },
   {
     id: 'brutal',
@@ -248,7 +250,11 @@ export const WIDGETS: { id: WidgetId; label: string; description: string }[] = [
     label: 'Number tiles',
     description: 'Key numbers that count up (projects, technologies, certifications, CGPA).',
   },
-  { id: 'radar', label: 'Skills radar', description: 'Skills and projects across your roles (set up in Admin > Roles).' },
+  {
+    id: 'radar',
+    label: 'Skills radar',
+    description: 'Skills and projects across your roles (set up in Admin > Roles).',
+  },
   {
     id: 'perYear',
     label: 'Projects per year',
@@ -337,7 +343,8 @@ export const FEATURES: {
   {
     id: 'pipelineMotif',
     label: 'Pipeline look',
-    description: 'The role cards are drawn as a data pipeline: each role shows the stage you give it, such as collect, analyse, model, deploy.',
+    description:
+      'The role cards are drawn as a data pipeline: each role shows the stage you give it, such as collect, analyse, model, deploy.',
     group: 'Data-enthusiast style',
   },
   {
@@ -422,6 +429,55 @@ function legacyIntros(value: unknown): Record<string, string> {
   return out;
 }
 
+// The timeline choices, checked so that nothing saved by hand can break the page
+export function mergeTimelineEdits(value: unknown): TimelineEdits {
+  const stored = isRecord(value) ? value : {};
+  const year = (v: unknown) =>
+    typeof v === 'number' && Number.isInteger(v) && v >= 1950 && v <= 2100 ? v : undefined;
+  const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+  const hidden = Array.isArray(stored.hidden)
+    ? Array.from(new Set(stored.hidden.filter((id): id is string => typeof id === 'string'))).slice(
+        0,
+        500
+      )
+    : [];
+
+  const overrides: TimelineEdits['overrides'] = {};
+  if (isRecord(stored.overrides)) {
+    Object.entries(stored.overrides)
+      .slice(0, 500)
+      .forEach(([id, raw]) => {
+        if (!isRecord(raw)) return;
+        const change: TimelineEdits['overrides'][string] = {};
+        const title = str(raw.title, 140);
+        const subtitle = str(raw.subtitle, 200);
+        const y = year(raw.year);
+        if (title) change.title = title;
+        if (subtitle) change.subtitle = subtitle;
+        if (y) change.year = y;
+        if (Object.keys(change).length) overrides[id] = change;
+      });
+  }
+
+  const seen = new Set<string>();
+  const custom: TimelineEdits['custom'] = [];
+  if (Array.isArray(stored.custom)) {
+    stored.custom.slice(0, 50).forEach((raw, index) => {
+      if (!isRecord(raw)) return;
+      const y = year(raw.year);
+      const title = str(raw.title, 140);
+      if (!y || !title) return;
+      let id = str(raw.id, 40).replace(/[^a-z0-9-]/gi, '') || `m${index}`;
+      while (seen.has(id)) id += 'x';
+      seen.add(id);
+      custom.push({ id, year: y, title, subtitle: str(raw.subtitle, 200), url: toWebUrl(raw.url) });
+    });
+  }
+
+  return { hidden, overrides, custom };
+}
+
 export function mergeSiteSettings(value: unknown): SiteSettings {
   const d = SITE_SETTINGS;
   const stored = isRecord(value) ? value : {};
@@ -452,6 +508,7 @@ export function mergeSiteSettings(value: unknown): SiteSettings {
           (item): item is string => typeof item === 'string' && item.trim() !== ''
         )
       : d.additionalCertifications,
+    timelineEdits: mergeTimelineEdits(stored.timelineEdits),
     contactTopics: Array.isArray(stored.contactTopics)
       ? Array.from(
           new Set(

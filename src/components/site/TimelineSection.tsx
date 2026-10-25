@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Award, Briefcase, ChevronDown, GraduationCap, Layers } from 'lucide-react';
+import { Award, Briefcase, ChevronDown, Flag, GraduationCap, Layers } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { Translate } from '@/lib/copy';
 import { scrollAndFlash } from '@/lib/dom';
 import type { TimelineItem, TimelineType } from '@/lib/timeline';
 import Section from './Section';
@@ -10,14 +11,55 @@ import { usePortfolio } from './PortfolioProvider';
 
 const TYPES: {
   id: TimelineType;
-  section: 'experience' | 'education' | 'projects' | 'certifications';
+  // the section whose name is used as the label; milestones added by hand have no section
+  section?: 'experience' | 'education' | 'projects' | 'certifications';
   icon: LucideIcon;
 }[] = [
   { id: 'experience', section: 'experience', icon: Briefcase },
   { id: 'education', section: 'education', icon: GraduationCap },
   { id: 'project', section: 'projects', icon: Layers },
   { id: 'certification', section: 'certifications', icon: Award },
+  { id: 'milestone', icon: Flag },
 ];
+
+const kindName = (kind: (typeof TYPES)[number], t: Translate, plural = false) =>
+  kind.section
+    ? plural
+      ? t(`section.${kind.section}.label`)
+      : t(`section.${kind.section}.label`).replace(/s$/, '')
+    : plural
+      ? 'Milestones'
+      : 'Milestone';
+
+// An entry that jumps to its details; a milestone added by hand links out (or is just text)
+function Wrapper({
+  item,
+  className,
+  children,
+}: {
+  item: TimelineItem;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (item.type !== 'milestone')
+    return (
+      <button
+        type="button"
+        onClick={() => scrollAndFlash(item.id)}
+        className={className}
+        title="Jump to the details"
+      >
+        {children}
+      </button>
+    );
+  return item.href ? (
+    <a href={item.href} target="_blank" rel="noopener noreferrer" className={className}>
+      {children}
+    </a>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
 
 // One timeline of everything, newest first. Select an item to jump to its full details.
 export default function TimelineSection({ number }: { number: string }) {
@@ -80,7 +122,8 @@ export default function TimelineSection({ number }: { number: string }) {
           {t('timeline.all')}
           <span className="tabular-nums opacity-80">{model.timeline.length}</span>
         </button>
-        {TYPES.map(({ id, section }) => {
+        {TYPES.map((entry) => {
+          const { id } = entry;
           const count = model.timeline.filter((i) => i.type === id).length;
           if (count === 0) return null;
           return (
@@ -91,7 +134,7 @@ export default function TimelineSection({ number }: { number: string }) {
               aria-pressed={type === id}
               onClick={() => showType(id)}
             >
-              {t(`section.${section}.label`)}
+              {kindName(entry, t, true)}
               <span className="tabular-nums opacity-80">{count}</span>
             </button>
           );
@@ -184,11 +227,9 @@ export default function TimelineSection({ number }: { number: string }) {
                   const dim = !matchesRole(item);
                   return (
                     <li key={item.id} className={dim ? 'opacity-45' : ''}>
-                      <button
-                        type="button"
-                        onClick={() => scrollAndFlash(item.id)}
+                      <Wrapper
+                        item={item}
                         className="card card-hover flex w-full items-start gap-3 p-4 text-left"
-                        title="Jump to the details"
                       >
                         <span className="bg-accent-soft text-accent-ink flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                           <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
@@ -199,10 +240,10 @@ export default function TimelineSection({ number }: { number: string }) {
                           </span>
                           <span className="text-muted block text-sm">{item.subtitle}</span>
                           <span className="text-subtle mt-0.5 block font-mono text-xs">
-                            {t(`section.${kind.section}.label`).replace(/s$/, '')} · {item.label}
+                            {kindName(kind, t)} · {item.label}
                           </span>
                         </span>
-                      </button>
+                      </Wrapper>
                     </li>
                   );
                 })}

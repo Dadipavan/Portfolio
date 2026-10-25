@@ -278,6 +278,7 @@ export const SITE_SETTINGS: SiteSettings = {
     'Cisco Networking Academy Course – Cisco (2023)',
     'Multiple IBM Cloud and AI certifications',
   ],
+  timelineEdits: { hidden: [], overrides: {}, custom: [] },
   contactTopics: ['General message', 'Job opportunity', 'Project or collaboration', 'Feedback'],
   appearance: {
     layout: 'dashboard',

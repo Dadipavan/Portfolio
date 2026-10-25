@@ -333,6 +333,16 @@ export interface SectionSettings {
   hidden: SectionId[];
 }
 
+// What the admin changed about "My path, year by year" (Admin > Timeline)
+export interface TimelineEdits {
+  // ids of entries left out of the timeline (they stay in their own sections)
+  hidden: string[];
+  // entries reworded or moved to another year, by entry id
+  overrides: Record<string, { title?: string; subtitle?: string; year?: number }>;
+  // milestones added by hand
+  custom: { id: string; year: number; title: string; subtitle: string; url: string }[];
+}
+
 export interface SiteSettings {
   // Small label above the name, for example "Data enthusiast"
   kicker: string;
@@ -340,6 +350,7 @@ export interface SiteSettings {
   // Text changed in Admin > Text and labels. Only changed entries are stored; the rest use the built-in wording.
   copy: Record<string, string>;
   additionalCertifications: string[];
+  timelineEdits: TimelineEdits;
   // The choices in the "What is this about?" list of the contact form
   contactTopics: string[];
   appearance: Appearance;

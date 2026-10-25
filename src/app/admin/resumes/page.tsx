@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Sparkles, UserPen, Wand2, Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
+import { Calendar, ChevronDown, Sparkles, UserPen, Wand2, Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
 import { Resume, getPortfolioData } from '@/lib/dataManager';
 import { ResumeManager } from '@/lib/resumeManager';
 import { mergeSiteSettings } from '@/lib/siteSettings';
@@ -340,17 +340,18 @@ export default function ResumesAdmin() {
       <div className="max-w-5xl mx-auto">
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 ring-1 ring-purple-200/70 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-purple-600" />
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 ring-1 ring-purple-200/70">
+                  <FileText className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900">Resume Management</h2>
+                  <p className="text-sm text-gray-500">Upload, build and manage resumes. Only resumes marked Public appear on your site.</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-semibold tracking-tight text-gray-900">Resume Management</h2>
-                <p className="text-sm text-gray-500">Upload and manage resumes. Only the one marked Public appears on your site.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
               <div
                 className="relative"
                 onBlur={(e) => {
@@ -363,7 +364,7 @@ export default function ResumesAdmin() {
                   aria-haspopup="menu"
                   aria-expanded={buildMenu}
                   onClick={() => setBuildMenu((v) => !v)}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/25 transition hover:from-emerald-600 hover:to-emerald-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30"
                 >
                   <Wand2 size={16} />
                   Build resume
@@ -397,39 +398,39 @@ export default function ResumesAdmin() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={testConnection}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors shadow-sm text-sm"
-                title="Check the database and storage setup"
-              >
-                <ShieldCheck size={14} />
-                Test
-              </button>
-              <button
-                onClick={fetchCloudFiles}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Cloud size={16} />
-                Sync Cloud Files
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddForm(true);
-                  setEditingIndex(null);
-                  setFormData({
-                    name: '',
-                    description: '',
-                    fileName: '',
-                    fileSize: '',
-                    fileType: ''
-                  });
-                  setSelectedFile(null);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors shadow-sm"
-              >
-                <Plus size={16} />
-                Upload Resume
-              </button>
+                <button
+                  onClick={fetchCloudFiles}
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                >
+                  <Cloud size={16} className="text-blue-600" />
+                  Sync cloud files
+                </button>
+                <button
+                  onClick={testConnection}
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                  title="Check the database and storage setup"
+                >
+                  <ShieldCheck size={16} className="text-gray-500" />
+                  Test
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(true);
+                    setEditingIndex(null);
+                    setFormData({ name: '', description: '', fileName: '', fileSize: '', fileType: '' });
+                    setSelectedFile(null);
+                  }}
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-b from-purple-500 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-600/25 transition hover:from-purple-600 hover:to-purple-700"
+                >
+                  <Plus size={16} />
+                  Upload resume
+                </button>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-gray-100 pt-4 text-xs font-medium">
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">{resumes.length} resume{resumes.length === 1 ? '' : 's'}</span>
+              <span className="rounded-full bg-green-50 px-3 py-1 text-green-700 ring-1 ring-green-100">{resumes.filter((r) => r.isPublic).length} public</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">{resumes.filter((r) => !r.isPublic).length} private</span>
             </div>
           </div>
 
@@ -664,21 +665,31 @@ export default function ResumesAdmin() {
                   transition={{ delay: index * 0.1 }}
                   className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-white" />
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex min-w-0 flex-1 items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-sm shadow-purple-500/25">
+                        <FileText className="h-6 w-6 text-white" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold text-gray-900">{resume.name}</h3>
-                          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                          <h3 className="truncate text-base font-semibold text-gray-900">{resume.name}</h3>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                             {getStorageIcon(resume.storageType)}
-                            <span className="text-xs text-gray-600">{getStorageText(resume.storageType)}</span>
-                          </div>
+                            {getStorageText(resume.storageType)}
+                          </span>
+                          {isRecipe(resume.builder) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
+                              <Wand2 size={11} /> Built here
+                            </span>
+                          )}
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{resume.description}</p>
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                        {resume.description && <p className="mb-2.5 text-sm text-gray-600">{resume.description}</p>}
+                        <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                          <span className="inline-flex items-center gap-1.5"><FileText size={13} className="text-gray-400" /> {resume.fileName}</span>
+                          <span className="inline-flex items-center gap-1.5"><HardDrive size={13} className="text-gray-400" /> {resume.fileSize}</span>
+                          <span className="inline-flex items-center gap-1.5"><Calendar size={13} className="text-gray-400" /> {new Date(resume.uploadDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
                           <label htmlFor={`resume-role-${resume.id}`} className="text-xs font-medium text-gray-600">
                             Offered when visitors choose
                           </label>
@@ -686,7 +697,7 @@ export default function ResumesAdmin() {
                             id={`resume-role-${resume.id}`}
                             value={resume.role || ''}
                             onChange={(e) => handleRoleChange(resume, e.target.value)}
-                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900"
+                            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/15"
                           >
                             <option value="">Any role (the general resume)</option>
                             {roles.map((role) => (
@@ -697,60 +708,61 @@ export default function ResumesAdmin() {
                             {resume.role && !roles.some((role) => role.id === resume.role) && <option value={resume.role}>{resume.role} (role removed)</option>}
                           </select>
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>📄 {resume.fileName}</span>
-                          <span>📊 {resume.fileSize}</span>
-                          <span>📅 {new Date(resume.uploadDate).toLocaleDateString()}</span>
-                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
+
+                    <div className="flex shrink-0 items-center gap-2 self-end lg:self-center">
                       <button
                         onClick={() => handleTogglePublic(resume)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                           resume.isPublic
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-green-100 text-green-700 ring-1 ring-green-200 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 hover:bg-gray-200'
                         }`}
                         title={resume.isPublic ? 'Offered to visitors. Click to make private' : 'Private. Click to offer it to visitors'}
                       >
                         {resume.isPublic ? <Globe size={12} /> : <Lock size={12} />}
                         {resume.isPublic ? 'Public' : 'Private'}
                       </button>
-                      <button
-                        onClick={() => handleDownload(resume)}
-                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Download Resume"
-                      >
-                        <Download size={16} />
-                      </button>
-                      {isRecipe(resume.builder) && (
+                      <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50/70 p-0.5">
                         <button
-                          onClick={() => {
-                            setBuilderRecipe(resume.builder as ResumeRecipe);
-                            setBuilderOpen(true);
-                          }}
-                          className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Open in the resume builder"
+                          onClick={() => handleDownload(resume)}
+                          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-white hover:text-green-600 hover:shadow-sm"
+                          title="Download Resume"
+                          aria-label={`Download ${resume.name}`}
                         >
-                          <Wand2 size={16} />
+                          <Download size={16} />
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleEdit(resume, index)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit Resume"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(resume, index)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Resume"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        {isRecipe(resume.builder) && (
+                          <button
+                            onClick={() => {
+                              setBuilderRecipe(resume.builder as ResumeRecipe);
+                              setBuilderOpen(true);
+                            }}
+                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-white hover:text-emerald-600 hover:shadow-sm"
+                            title="Open in the resume builder"
+                            aria-label={`Open ${resume.name} in the resume builder`}
+                          >
+                            <Wand2 size={16} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleEdit(resume, index)}
+                          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-white hover:text-blue-600 hover:shadow-sm"
+                          title="Edit Resume"
+                          aria-label={`Edit ${resume.name}`}
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(resume, index)}
+                          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-white hover:text-red-600 hover:shadow-sm"
+                          title="Delete Resume"
+                          aria-label={`Delete ${resume.name}`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

@@ -1,10 +1,15 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { skillIconFor } from '@/lib/skillIcons';
 import { isLinkable, tagKey } from '@/lib/tags';
 import type { RoleId } from '@/lib/types';
 import Section from './Section';
 import { usePortfolio } from './PortfolioProvider';
+
+// skills shown in a card before "Show all"
+const PREVIEW = 10;
 
 // Skills by category. The role tabs are the same "View as" choice used across the page.
 export default function SkillsBrowser({ number }: { number: string }) {
@@ -12,6 +17,7 @@ export default function SkillsBrowser({ number }: { number: string }) {
   const { roles } = model;
   const categories = content.technicalSkills;
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const chosen = roles.get(role);
   const options = roles.switchOptions;
@@ -95,55 +101,86 @@ export default function SkillsBrowser({ number }: { number: string }) {
 
         {shown.length > 0 ? (
           <div className="gap-6 sm:columns-2 lg:columns-3">
-            {shown.map((category) => (
-              <div key={category.category} className="card mb-6 break-inside-avoid p-5 sm:p-6">
-                <h3 className="text-ink flex items-center gap-3 font-semibold">
-                  {category.emoji?.trim() && (
+            {shown.map((category) => {
+              const Icon = skillIconFor(category.category);
+              const open = expanded.has(category.category);
+              const visible = open ? category.skills : category.skills.slice(0, PREVIEW);
+              const hiddenCount = category.skills.length - visible.length;
+              return (
+                <div
+                  key={category.category}
+                  className="skill-card card relative mb-6 break-inside-avoid overflow-hidden p-5 sm:p-6"
+                >
+                  <span aria-hidden="true" className="bg-accent/70 absolute inset-x-0 top-0 h-1" />
+                  <h3 className="text-ink flex items-center gap-3 font-semibold">
                     <span
                       aria-hidden="true"
-                      className="bg-accent-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg"
+                      className="skill-icon border-line bg-surface text-accent-ink flex h-10 w-10 shrink-0 items-center justify-center rounded-full border"
                     >
-                      {category.emoji}
+                      <Icon className="h-[18px] w-[18px]" />
                     </span>
+                    <span className="min-w-0 flex-1 leading-snug">{category.category}</span>
+                    <span className="text-subtle font-mono text-xs tabular-nums">
+                      {category.skills.length}
+                    </span>
+                  </h3>
+                  <ul className="mt-5 flex flex-wrap gap-2">
+                    {visible.map((skill) => {
+                      const used = model.techUsage[tagKey(skill)];
+                      const interactive =
+                        isLinkable(model.evidence, skill) &&
+                        (settings.features.explorer || Boolean(used));
+                      return (
+                        <li key={skill}>
+                          {interactive ? (
+                            <button
+                              type="button"
+                              onClick={() => openTag(skill)}
+                              aria-haspopup={settings.features.explorer ? 'dialog' : undefined}
+                              aria-label={
+                                used
+                                  ? `${skill}, used in ${used.count} project${used.count === 1 ? '' : 's'}. Show details`
+                                  : `${skill}. Show details`
+                              }
+                              className="tag"
+                            >
+                              {skill}
+                              {used && (
+                                <span className="bg-accent-soft text-accent-soft-ink rounded px-1.5 text-[11px] font-semibold tabular-nums">
+                                  {used.count}
+                                </span>
+                              )}
+                            </button>
+                          ) : (
+                            <span className="chip">{skill}</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {(hiddenCount > 0 || open) && category.skills.length > PREVIEW && (
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() =>
+                        setExpanded((current) => {
+                          const next = new Set(current);
+                          if (!next.delete(category.category)) next.add(category.category);
+                          return next;
+                        })
+                      }
+                      className="text-accent-ink mt-4 inline-flex items-center gap-1 text-sm font-medium hover:underline"
+                    >
+                      {open ? 'Show fewer' : `Show all ${category.skills.length}`}
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+                      />
+                    </button>
                   )}
-                  {category.category}
-                </h3>
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {category.skills.map((skill) => {
-                    const used = model.techUsage[tagKey(skill)];
-                    const interactive =
-                      isLinkable(model.evidence, skill) &&
-                      (settings.features.explorer || Boolean(used));
-                    return (
-                      <li key={skill}>
-                        {interactive ? (
-                          <button
-                            type="button"
-                            onClick={() => openTag(skill)}
-                            aria-haspopup={settings.features.explorer ? 'dialog' : undefined}
-                            aria-label={
-                              used
-                                ? `${skill}, used in ${used.count} project${used.count === 1 ? '' : 's'}. Show details`
-                                : `${skill}. Show details`
-                            }
-                            className="tag"
-                          >
-                            {skill}
-                            {used && (
-                              <span className="bg-accent-soft text-accent-soft-ink rounded px-1.5 text-[11px] font-semibold tabular-nums">
-                                {used.count}
-                              </span>
-                            )}
-                          </button>
-                        ) : (
-                          <span className="chip">{skill}</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="text-muted">{t('skills.empty')}</p>

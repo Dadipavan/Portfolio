@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wand2, Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
+import { ChevronDown, Sparkles, UserPen, Wand2, Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
 import { Resume, getPortfolioData } from '@/lib/dataManager';
 import { ResumeManager } from '@/lib/resumeManager';
 import { mergeSiteSettings } from '@/lib/siteSettings';
 import type { RoleDef } from '@/lib/types';
 import AdminLayout from '@/components/AdminLayout';
-import ResumeBuilder from '@/components/admin/ResumeBuilder';
+import ResumeBuilder, { type BuilderMode } from '@/components/admin/ResumeBuilder';
 import { isRecipe, type ResumeRecipe } from '@/lib/resume/recipe';
 
-const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
-const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
+const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
+const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
 const labelStyles = "block text-sm font-medium text-gray-700 mb-2";
 
 export default function ResumesAdmin() {
@@ -22,6 +22,8 @@ export default function ResumesAdmin() {
   // the resume builder replaces the list while it is open
   const [builderOpen, setBuilderOpen] = useState(false);
   const [builderRecipe, setBuilderRecipe] = useState<ResumeRecipe | null>(null);
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('jd');
+  const [buildMenu, setBuildMenu] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -320,6 +322,7 @@ export default function ResumesAdmin() {
       <AdminLayout>
         <div className="max-w-7xl mx-auto">
           <ResumeBuilder
+            initialMode={builderMode}
             initialRecipe={builderRecipe}
             onClose={() => setBuilderOpen(false)}
             onSaved={() => {
@@ -339,29 +342,64 @@ export default function ResumesAdmin() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 ring-1 ring-purple-200/70 rounded-xl flex items-center justify-center">
                 <FileText className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Resume Management</h2>
+                <h2 className="text-xl font-semibold tracking-tight text-gray-900">Resume Management</h2>
                 <p className="text-sm text-gray-500">Upload and manage resumes. Only the one marked Public appears on your site.</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setBuilderRecipe(null);
-                  setBuilderOpen(true);
+              <div
+                className="relative"
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setBuildMenu(false);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
-                title="Build an ATS-friendly resume from a job description"
+                onKeyDown={(e) => e.key === 'Escape' && setBuildMenu(false)}
               >
-                <Wand2 size={16} />
-                Build from JD
-              </button>
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={buildMenu}
+                  onClick={() => setBuildMenu((v) => !v)}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
+                >
+                  <Wand2 size={16} />
+                  Build resume
+                  <ChevronDown size={14} className={`transition-transform ${buildMenu ? 'rotate-180' : ''}`} />
+                </button>
+                {buildMenu && (
+                  <div role="menu" className="absolute right-0 z-20 mt-2 w-72 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+                    {([
+                      { mode: 'own' as const, icon: UserPen, title: 'Build my own', text: 'Tick what to include from your portfolio and edit every part.' },
+                      { mode: 'jd' as const, icon: Sparkles, title: 'Build from a job description', text: 'Paste a JD and get keyword matches and recommendations.' },
+                    ]).map((o) => (
+                      <button
+                        key={o.mode}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setBuildMenu(false);
+                          setBuilderRecipe(null);
+                          setBuilderMode(o.mode);
+                          setBuilderOpen(true);
+                        }}
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-emerald-50"
+                      >
+                        <o.icon size={18} className="mt-0.5 shrink-0 text-emerald-600" />
+                        <span>
+                          <span className="block text-sm font-medium text-gray-900">{o.title}</span>
+                          <span className="block text-xs text-gray-500">{o.text}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={testConnection}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm text-sm"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors shadow-sm text-sm"
                 title="Check the database and storage setup"
               >
                 <ShieldCheck size={14} />
@@ -369,7 +407,7 @@ export default function ResumesAdmin() {
               </button>
               <button
                 onClick={fetchCloudFiles}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
               >
                 <Cloud size={16} />
                 Sync Cloud Files
@@ -387,7 +425,7 @@ export default function ResumesAdmin() {
                   });
                   setSelectedFile(null);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors shadow-sm"
               >
                 <Plus size={16} />
                 Upload Resume
@@ -400,7 +438,7 @@ export default function ResumesAdmin() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+              className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -485,7 +523,7 @@ export default function ResumesAdmin() {
                 <button
                   onClick={handleSave}
                   disabled={uploading || !formData.name || !formData.description || (!selectedFile && editingIndex === null)}
-                  className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={16} />
                   {uploading ? 'Processing...' : (editingIndex !== null ? 'Update Resume' : 'Upload Resume')}
@@ -536,7 +574,7 @@ export default function ResumesAdmin() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors gap-3"
                         >
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -571,7 +609,7 @@ export default function ResumesAdmin() {
                             </a>
                             <button
                               onClick={() => importCloudFile(file)}
-                              className="px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                              className="px-3 py-2 bg-purple-600 text-white text-sm rounded-xl hover:bg-purple-700 transition-colors"
                               title="Import to Portfolio"
                             >
                               Import
@@ -592,7 +630,7 @@ export default function ResumesAdmin() {
                   </button>
                   <button
                     onClick={fetchCloudFiles}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
                   >
                     <Cloud size={16} />
                     Refresh
@@ -611,7 +649,7 @@ export default function ResumesAdmin() {
                 <p className="text-gray-500 mb-4">Start by uploading your first resume</p>
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
                 >
                   <Upload size={16} />
                   Upload Your First Resume
@@ -624,7 +662,7 @@ export default function ResumesAdmin() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">

@@ -11,6 +11,7 @@ export interface Run {
 
 export type DocBlock =
   | { kind: 'name'; text: string }
+  | { kind: 'tagline'; text: string }
   | { kind: 'contact'; runs: Run[] }
   | { kind: 'heading'; text: string }
   // a title on the left and a date on the right, with an optional second line (company, school)
@@ -229,6 +230,12 @@ export function layoutBlocks(blocks: DocBlock[], opts: PdfOptions): LaidOut {
       ensure(lh(size));
       put([{ text, bold: true, size, x: left + Math.max(0, (width - w) / 2) }], size);
       y += 2;
+    } else if (b.kind === 'tagline') {
+      const size = s.body + 1;
+      const text = toPdfText(b.text);
+      const w = textWidth(text, size, false);
+      ensure(lh(size));
+      put([{ text, bold: false, size, x: left + Math.max(0, (width - w) / 2) }], size);
     } else if (b.kind === 'contact') {
       const size = s.body - 0.5;
       const wrapped = wrapRuns(b.runs, size, width);

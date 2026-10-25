@@ -6,13 +6,13 @@ import type { LucideIcon } from 'lucide-react';
 import { Plus, Save, Trash2 } from 'lucide-react';
 
 export const inputClass =
-  'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm';
+  'w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition placeholder:text-gray-400 hover:border-gray-400 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/15';
 export const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 export const hintClass = 'mt-1 text-xs text-gray-500';
 export const buttonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50';
 export const primaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-purple-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-600/25 transition hover:from-purple-600 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/30 disabled:cursor-not-allowed disabled:opacity-50';
 
 export function PageHeader({
   icon: Icon,
@@ -25,11 +25,11 @@ export function PageHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-purple-100">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 ring-1 ring-purple-200/70">
         <Icon className="h-6 w-6 text-purple-600" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900">{title}</h1>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
     </div>
@@ -49,7 +49,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 ${className}`}
+      className={`space-y-4 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6 ${className}`}
     >
       {(title || description) && (
         <div>

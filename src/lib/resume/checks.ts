@@ -1,8 +1,7 @@
 // Plain-language ATS checks on the finished document.
-import type { PersonalInfo } from '@/lib/types';
 import type { DocBlock } from './pdf';
 import { toPdfText } from './pdf';
-import { blocksText } from './source';
+import { blocksText, type ResumeHeader } from './source';
 
 export interface Check {
   id: string;
@@ -10,12 +9,12 @@ export interface Check {
   text: string;
 }
 
-export function runChecks(personal: PersonalInfo, blocks: DocBlock[], pages: number): Check[] {
+export function runChecks(header: ResumeHeader, blocks: DocBlock[], pages: number): Check[] {
   const checks: Check[] = [];
   const add = (id: string, level: Check['level'], text: string) => checks.push({ id, level, text });
 
-  if (!personal?.name?.trim()) add('name', 'bad', 'Your name is missing. Add it in Admin > Personal.');
-  const missing = [!personal?.email && 'email', !personal?.phone && 'phone', !personal?.location && 'location'].filter(Boolean);
+  if (!header.name.trim()) add('name', 'bad', 'Your name is missing. Type it in the Header section.');
+  const missing = [!header.email.trim() && 'email', !header.phone.trim() && 'phone', !header.location.trim() && 'location'].filter(Boolean);
   if (missing.length) add('contact', 'warn', `Contact details missing: ${missing.join(', ')}. Recruiters and ATS expect them.`);
   else add('contact', 'ok', 'Name, email, phone and location are in the header.');
 

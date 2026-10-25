@@ -349,13 +349,13 @@ empty gap.
 
 ---
 
-## 9. Resume builder (Admin > Resumes > Build from JD)
+## 9. Resume builder (Admin > Resumes > Build resume)
 
-Paste a job description and get an ATS-friendly PDF made from your own content. Nothing in your portfolio is changed.
+The **Build resume** button has two ways in:
 
-1. **Analyse**: the keywords the job description repeats are found (your own skills and projects are used as the word list). No AI, no network.
-2. **Pick**: experience, projects, skills, education, certificates and achievements come as tick-boxes. The best matches are ticked for you; each line can be reworded for this resume only.
-3. **Check**: the page preview is the exact PDF layout. The keyword percentage and the ATS checks (length, contact details, numbers in bullets) update as you tick.
-4. **Save**: *Download PDF*, or *Save to my resumes* (stored in your `resumes` bucket as a private resume; make it public in the list if you want visitors to get it). Resumes made here have a wand button to reopen them in the builder.
+- **Build my own**: everything from your portfolio is offered; tick what goes in.
+- **Build from a job description**: paste a job description and the best matches are ticked for you, with a keyword percentage and the keywords you are missing. You can switch between the two ways at the top of the left panel.
 
-The PDF is one column of real text in Helvetica with standard headings, so ATS software can read it. No Supabase change is needed.
+Either way, **every part of the resume is editable on the left** and only changes this resume, never your portfolio: header (name, headline, contact details, links), summary, skills groups and each skill, every job, project and education entry (title, dates, second line, bullets: reword, tick, move, remove, add), certifications, achievements, the heading of every section, the order of the sections, and your own extra sections. The preview on the right is the exact PDF, with ATS checks above it.
+
+*Download PDF*, or *Save to my resumes* (private until you make it public). Resumes made here have a wand button to reopen them with all your edits. The PDF is one column of real text in Helvetica with standard headings, so ATS software can read it. No Supabase change is needed.

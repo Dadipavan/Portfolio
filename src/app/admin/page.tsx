@@ -19,7 +19,9 @@ import {
   ChartLine,
   ListChecks,
   SlidersHorizontal,
-  Camera
+  Camera,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { initializeData, getPortfolioData, getPortfolioDataSync, exportData } from '@/lib/dataManager';
 import AdminLayout from '@/components/AdminLayout';
@@ -96,6 +98,7 @@ export default function AdminDashboard() {
   const lookName = LAYOUTS.find((layout) => layout.id === settings.appearance.layout)?.name ?? settings.appearance.layout;
 
   const quickActions = [
+    { title: 'Resumes', href: '/admin/resumes', icon: FileText, description: 'Upload resumes or build an ATS-friendly one from a job description' },
     { title: 'Personal Info', href: '/admin/personal', icon: User, description: 'Your details, profile links and quick facts' },
     { title: 'Projects and case studies', href: '/admin/projects', icon: Code, description: 'Write the story, add pictures, publish when ready' },
     { title: 'Certificates', href: '/admin/certifications', icon: Award, description: 'Upload each certificate as a picture or PDF' },
@@ -116,9 +119,21 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here&apos;s an overview of your portfolio content.</p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-600 to-indigo-600 p-6 text-white shadow-lg shadow-purple-600/20 sm:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-white/10" />
+          <div className="relative">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
+            <p className="mt-1 max-w-xl text-purple-100">Welcome back! Here&apos;s an overview of your portfolio content.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a href="/admin/resumes" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm hover:bg-purple-50">
+                <FileText size={16} aria-hidden="true" /> Build a resume
+              </a>
+              <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-white/25">
+                <ExternalLink size={16} aria-hidden="true" /> View portfolio
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid: the entries that are on the site, and the ones held back */}
@@ -131,12 +146,12 @@ export default function AdminDashboard() {
                   <p className={`${typeof stat.value === 'number' ? 'text-3xl' : 'text-2xl'} font-bold text-gray-900 mt-1`}>{stat.value}</p>
                   {stat.detail && <p className="text-sm text-gray-600 mt-1">{stat.detail}</p>}
                 </div>
-                <div className={`w-12 h-12 shrink-0 ${stat.bg} rounded-lg flex items-center justify-center`}>
+                <div className={`w-12 h-12 shrink-0 ${stat.bg} rounded-xl flex items-center justify-center`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} aria-hidden="true" />
                 </div>
               </div>
             );
-            const card = 'bg-white rounded-xl p-6 border border-gray-200 shadow-sm';
+            const card = 'bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm';
             return stat.href ? (
               <motion.a
                 key={stat.label}
@@ -144,7 +159,7 @@ export default function AdminDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`${card} block hover:border-purple-300 hover:shadow-md transition-all`}
+                className={`${card} block transition-all hover:-translate-y-0.5 hover:border-purple-300 hover:shadow-md`}
               >
                 {body}
               </motion.a>
@@ -173,10 +188,10 @@ export default function AdminDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
-                className="bg-white rounded-lg p-4 border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all duration-200 group"
+                className="group rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-300 hover:shadow-md"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <div className="w-9 h-9 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center ring-1 ring-purple-200/60 group-hover:from-purple-200 group-hover:to-indigo-200 transition-colors">
                     <action.icon className="w-4 h-4 text-purple-600" aria-hidden="true" />
                   </div>
                   <h3 className="font-medium text-gray-900">{action.title}</h3>
@@ -190,7 +205,7 @@ export default function AdminDashboard() {
         {/* Content Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Status</h3>
             <div className="space-y-3">
               {data && (
@@ -227,7 +242,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Data Management */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Management</h3>
             <div className="space-y-3">
               <button

@@ -1,7 +1,8 @@
 'use client';
 
-// Resume builder: paste a job description, see which keywords it asks for, tick what from the portfolio goes
-// into the resume, check the live preview, then download the PDF or save it with the other resumes.
+// Resume builder. Two ways in: build it yourself by ticking what to include, or paste a job description and get
+// recommendations. Either way every part of the resume can be edited on the left, with the exact PDF pages
+// as a live preview on the right. The portfolio content is never changed.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
@@ -10,52 +11,81 @@ import {
   CircleAlert,
   CircleCheck,
   Download,
+  FilePlus2,
   Plus,
   RotateCcw,
   Save,
   Sparkles,
+  Trash2,
   TriangleAlert,
+  UserPen,
 } from 'lucide-react';
 import { getPortfolioDataForEditing, type Resume } from '@/lib/dataManager';
 import { ResumeManager } from '@/lib/resumeManager';
 import { mergeSiteSettings } from '@/lib/siteSettings';
 import type { RoleDef } from '@/lib/types';
 import { coverage, extractKeywords, type Keyword } from '@/lib/resume/keywords';
-import {
-  buildPdf,
-  layoutBlocks,
-  type Density,
-  type PageSize,
-  type PdfOptions,
-} from '@/lib/resume/pdf';
+import { buildPdf, layoutBlocks, type Density, type PageSize, type PdfOptions } from '@/lib/resume/pdf';
 import {
   DEFAULT_ORDER,
-  SECTION_TITLES,
   autoSelect,
   blocksText,
   buildBlocks,
   draftSummary,
+  newCustomSection,
+  normaliseItems,
+  ownSelect,
+  sectionTitle,
   type BuilderItems,
   type PickItem,
   type SectionKey,
-  type SkillPick,
   type SourceData,
 } from '@/lib/resume/source';
 import { isRecipe, pdfFileName, type ResumeRecipe } from '@/lib/resume/recipe';
 import { runChecks } from '@/lib/resume/checks';
 import { useConfirm, useNotify } from '@/components/admin/Feedback';
-import { Panel, buttonClass, inputClass, labelClass, primaryButtonClass } from '@/components/admin/kit';
+import { buttonClass, primaryButtonClass } from '@/components/admin/kit';
+import {
+  Accordion,
+  EntriesEditor,
+  Field,
+  HeaderEditor,
+  IconButton,
+  LinesEditor,
+  OneLineEditor,
+  SkillsEditor,
+} from '@/components/admin/ResumeEditors';
 
-const DRAFT_KEY = 'resume_builder_draft_v1';
+const DRAFT_KEY = 'resume_builder_draft_v2';
 
-type ListSection = 'experience' | 'projects' | 'education' | 'certifications' | 'achievements';
+export type BuilderMode = 'own' | 'jd';
 
 interface Props {
+  // how a new resume is started; a resume opened for editing keeps the way it was made
+  initialMode?: BuilderMode;
   // a resume made earlier in the builder, opened for editing
   initialRecipe?: ResumeRecipe | null;
   onClose: () => void;
   // called after a resume was saved to the list
   onSaved: () => void;
+}
+
+const select =
+  'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/30';
+const label = 'mb-1 block text-xs font-medium text-gray-600';
+
+function Card({ title, description, children, className = '' }: { title?: string; description?: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
+      {(title || description) && (
+        <div>
+          {title && <h3 className="text-sm font-semibold text-gray-900">{title}</h3>}
+          {description && <p className="mt-0.5 text-xs text-gray-500">{description}</p>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
 }
 
 // ---------- the preview: the exact pages that the PDF will have ----------
@@ -124,137 +154,10 @@ function PagePreview({ pages, pageWidth, pageHeight }: ReturnType<typeof layoutB
   );
 }
 
-// ---------- the pick lists ----------
-
-function ItemGroup({
-  title,
-  list,
-  help,
-  onChange,
-}: {
-  title: string;
-  list: PickItem[];
-  help?: string;
-  onChange: (next: PickItem[]) => void;
-}) {
-  if (!list.length) return null;
-  const patch = (i: number, change: Partial<PickItem>) =>
-    onChange(list.map((it, k) => (k === i ? { ...it, ...change } : it)));
-  const single = list.every((it) => it.lines.length <= 1 && !it.sub && !it.right);
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between gap-3">
-        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-        <span className="text-xs text-gray-500">
-          {list.filter((x) => x.on).length} of {list.length} in the resume
-        </span>
-      </div>
-      {help && <p className="text-xs text-gray-500">{help}</p>}
-      <ul className="space-y-2">
-        {list.map((it, i) => (
-          <li key={it.key} className={`rounded-lg border p-3 ${it.on ? 'border-purple-200 bg-purple-50/40' : 'border-gray-200 bg-white'}`}>
-            <label className="flex cursor-pointer items-start gap-2">
-              <input
-                type="checkbox"
-                className="mt-1 h-4 w-4 accent-purple-600"
-                checked={it.on}
-                onChange={(e) => patch(i, { on: e.target.checked })}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block break-words text-sm font-medium text-gray-900">{it.left}</span>
-                {!single && (it.sub || it.right) && (
-                  <span className="block break-words text-xs text-gray-500">{[it.sub, it.right].filter(Boolean).join('  ·  ')}</span>
-                )}
-              </span>
-              {it.score > 0 && (
-                <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700" title="How strongly this matches the job description">
-                  match {Math.round(it.score * 10) / 10}
-                </span>
-              )}
-            </label>
-            {it.on && !single && it.lines.length > 0 && (
-              <ul className="mt-2 space-y-1.5 pl-6">
-                {it.lines.map((l, k) => (
-                  <li key={k} className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      aria-label="Include this line"
-                      className="mt-2 h-4 w-4 shrink-0 accent-purple-600"
-                      checked={l.on}
-                      onChange={(e) =>
-                        patch(i, { lines: it.lines.map((x, y) => (y === k ? { ...x, on: e.target.checked } : x)) })
-                      }
-                    />
-                    <textarea
-                      rows={Math.min(4, Math.max(1, Math.ceil(l.text.length / 70)))}
-                      value={l.text}
-                      aria-label="Line text (changes only this resume)"
-                      onChange={(e) =>
-                        patch(i, { lines: it.lines.map((x, y) => (y === k ? { ...x, text: e.target.value } : x)) })
-                      }
-                      className={`w-full resize-none rounded-md border px-2 py-1 text-sm ${
-                        l.on ? 'border-gray-300 bg-white text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'
-                      }`}
-                    />
-                    {l.score > 0 && <span className="mt-1.5 text-xs text-green-700">+{Math.round(l.score * 10) / 10}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function SkillsGroup({ skills, onChange }: { skills: SkillPick[]; onChange: (next: SkillPick[]) => void }) {
-  if (!skills.length) return null;
-  const patch = (i: number, change: Partial<SkillPick>) =>
-    onChange(skills.map((c, k) => (k === i ? { ...c, ...change } : c)));
-  return (
-    <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-gray-900">Skills</h4>
-      <p className="text-xs text-gray-500">Green skills appear in the job description. Click a skill to remove it from, or add it back to, the resume.</p>
-      <ul className="space-y-2">
-        {skills.map((c, i) => (
-          <li key={c.category} className={`rounded-lg border p-3 ${c.on ? 'border-purple-200 bg-purple-50/40' : 'border-gray-200'}`}>
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-900">
-              <input type="checkbox" className="h-4 w-4 accent-purple-600" checked={c.on} onChange={(e) => patch(i, { on: e.target.checked })} />
-              {c.category}
-            </label>
-            {c.on && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {c.skills.map((s, k) => (
-                  <button
-                    key={s.name}
-                    type="button"
-                    aria-pressed={s.on}
-                    onClick={() => patch(i, { skills: c.skills.map((x, y) => (y === k ? { ...x, on: !x.on } : x)) })}
-                    className={`rounded-full border px-2.5 py-0.5 text-xs ${
-                      !s.on
-                        ? 'border-gray-200 bg-gray-50 text-gray-400 line-through'
-                        : s.hit
-                          ? 'border-green-300 bg-green-50 text-green-800'
-                          : 'border-gray-300 bg-white text-gray-700'
-                    }`}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 // ---------- the builder ----------
 
-export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props) {
+export default function ResumeBuilder({ initialMode = 'jd', initialRecipe, onClose, onSaved }: Props) {
   const notify = useNotify();
   const confirm = useConfirm();
 
@@ -262,6 +165,7 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
   const [roles, setRoles] = useState<RoleDef[]>([]);
   const [loadError, setLoadError] = useState('');
 
+  const [mode, setMode] = useState<BuilderMode>(initialRecipe?.mode ?? initialMode);
   const [jobTitle, setJobTitle] = useState('');
   const [company, setCompany] = useState('');
   const [jd, setJd] = useState('');
@@ -273,6 +177,7 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
     fontSize: 10.5,
     density: 'normal',
   });
+  const [open, setOpen] = useState<Set<string>>(new Set(['header', 'experience']));
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [saving, setSaving] = useState(false);
@@ -311,13 +216,13 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
     };
   }, []);
 
-  // restore a saved resume, or the unfinished draft from this browser
+  // restore a saved resume or the unfinished draft; otherwise start "build my own" with everything offered
   useEffect(() => {
     if (!data || restored.current) return;
     restored.current = true;
     let source: Partial<ResumeRecipe> | null = initialRecipe && isRecipe(initialRecipe) ? initialRecipe : null;
     let fromDraft = false;
-    if (!source) {
+    if (!source && !initialRecipe) {
       try {
         const raw = localStorage.getItem(DRAFT_KEY);
         const parsed = raw ? JSON.parse(raw) : null;
@@ -329,54 +234,73 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
         /* an unreadable draft is ignored */
       }
     }
-    if (!source || !source.items) return;
-    setJobTitle(source.jobTitle ?? '');
-    setCompany(source.company ?? '');
-    setJd(source.jd ?? '');
-    setItems(source.items);
-    setOrder(source.order ?? DEFAULT_ORDER);
-    if (source.options) setOptions(source.options);
-    setKeywords(extractKeywords(source.jd ?? '', vocabulary));
-    if (fromDraft) notify.info('Your unfinished resume was restored.');
-  }, [data, initialRecipe, vocabulary, notify]);
+    if (source && source.items) {
+      setJobTitle(source.jobTitle ?? '');
+      setCompany(source.company ?? '');
+      setJd(source.jd ?? '');
+      setItems(normaliseItems(source.items, data.personalInfo));
+      setOrder(source.order ?? DEFAULT_ORDER);
+      if (source.options) setOptions(source.options);
+      setMode(source.mode ?? (source.jd ? 'jd' : 'own'));
+      setKeywords(extractKeywords(source.jd ?? '', vocabulary));
+      if (fromDraft) notify.info('Your unfinished resume was restored.');
+    } else if (initialMode === 'own') {
+      setItems(ownSelect(data));
+    }
+  }, [data, initialRecipe, initialMode, vocabulary, notify]);
 
   // keep an unfinished draft in this browser
   useEffect(() => {
     if (!items) return;
     const t = setTimeout(() => {
       try {
-        const draft: ResumeRecipe = { version: 1, jobTitle, company, jd, items, order, options, savedAt: new Date().toISOString() };
+        const draft: ResumeRecipe = { version: 1, mode, jobTitle, company, jd, items, order, options, savedAt: new Date().toISOString() };
         localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
       } catch {
         /* storage full or blocked: the draft is simply not kept */
       }
     }, 600);
     return () => clearTimeout(t);
-  }, [items, jobTitle, company, jd, order, options]);
+  }, [items, mode, jobTitle, company, jd, order, options]);
 
   const pdfOptions: PdfOptions = useMemo(
-    () => ({ ...options, title: `${data?.personalInfo?.name ?? 'Resume'}${jobTitle ? ` - ${jobTitle}` : ''}`, author: data?.personalInfo?.name ?? '' }),
-    [options, data, jobTitle]
+    () => ({ ...options, title: `${items?.header.name ?? 'Resume'}${jobTitle ? ` - ${jobTitle}` : ''}`, author: items?.header.name ?? '' }),
+    [options, items?.header.name, jobTitle]
   );
 
-  const blocks = useMemo(
-    () => (data && items ? buildBlocks(data.personalInfo, items, order, data.personalInfo.links ?? []) : []),
-    [data, items, order]
-  );
+  const blocks = useMemo(() => (items ? buildBlocks(items, order) : []), [items, order]);
   const laid = useMemo(() => layoutBlocks(blocks, pdfOptions), [blocks, pdfOptions]);
   const cov = useMemo(() => coverage(blocksText(blocks), keywords), [blocks, keywords]);
-  const checks = useMemo(
-    () => (data && items ? runChecks(data.personalInfo, blocks, laid.pages.length) : []),
-    [data, items, blocks, laid.pages.length]
-  );
+  const checks = useMemo(() => (items ? runChecks(items.header, blocks, laid.pages.length) : []), [items, blocks, laid.pages.length]);
+
+  const patch = (change: Partial<BuilderItems>) => setItems((cur) => (cur ? { ...cur, ...change } : cur));
+  const toggle = (id: string) =>
+    setOpen((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const chooseMode = (next: BuilderMode) => {
+    setMode(next);
+    if (next === 'own' && !items && data) setItems(ownSelect(data));
+  };
 
   const analyse = async () => {
     if (!data) return;
-    if (items && !(await confirm({ title: 'Choose again?', message: 'This re-selects items for the new job description and replaces your current ticks and edited lines.', confirmLabel: 'Re-select' }))) return;
+    if (
+      items &&
+      !(await confirm({
+        title: 'Choose again?',
+        message: 'This re-selects items for the job description and replaces your current ticks and edits (including your header).',
+        confirmLabel: 'Re-select',
+      }))
+    )
+      return;
     const kw = extractKeywords(jd, vocabulary);
     setKeywords(kw);
-    const next = autoSelect(data, kw, jobTitle);
-    setItems(next);
+    setItems(autoSelect(data, kw, jobTitle));
     setOrder(DEFAULT_ORDER);
     if (!jd.trim()) notify.info('No job description: everything from your portfolio is offered, nothing is ranked.');
     else if (!kw.length) notify.info('No keywords were found. Paste more of the job description.');
@@ -384,8 +308,9 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
   };
 
   const startOver = async () => {
-    if (!(await confirm({ title: 'Start over?', message: 'The job description, ticks and edited lines of this unfinished resume are cleared. Saved resumes are not affected.', confirmLabel: 'Start over', danger: true }))) return;
-    setItems(null);
+    if (!data) return;
+    if (!(await confirm({ title: 'Start over?', message: 'Your edits, ticks and job description in this unfinished resume are cleared. Saved resumes are not affected.', confirmLabel: 'Start over', danger: true }))) return;
+    setItems(mode === 'own' ? ownSelect(data) : null);
     setJd('');
     setJobTitle('');
     setCompany('');
@@ -398,35 +323,46 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
     }
   };
 
-  const setList = (section: ListSection, next: PickItem[]) => setItems((cur) => (cur ? { ...cur, [section]: next } : cur));
-
-  const move = (i: number, d: -1 | 1) =>
+  const moveSection = (key: SectionKey, d: -1 | 1) =>
     setOrder((cur) => {
+      const i = cur.indexOf(key);
       const j = i + d;
-      if (j < 0 || j >= cur.length) return cur;
+      if (i < 0 || j < 0 || j >= cur.length) return cur;
       const copy = [...cur];
       [copy[i], copy[j]] = [copy[j], copy[i]];
       return copy;
     });
 
+  const addCustom = () => {
+    const c = newCustomSection();
+    patch({ custom: [...(items?.custom ?? []), c] });
+    setOrder((cur) => [...cur, `custom:${c.id}` as SectionKey]);
+    setOpen((cur) => new Set(cur).add(`custom:${c.id}`));
+  };
+
+  const removeCustom = async (id: string) => {
+    if (!(await confirm({ title: 'Delete this section?', message: 'The section and its lines are removed from this resume.', confirmLabel: 'Delete', danger: true }))) return;
+    patch({ custom: (items?.custom ?? []).filter((c) => c.id !== id) });
+    setOrder((cur) => cur.filter((k) => k !== `custom:${id}`));
+  };
+
   // a keyword the owner really has can be added to the skills with one click
   const addSkill = (term: string) =>
     setItems((cur) => {
       if (!cur) return cur;
-      const label = term.replace(/\b\w/g, (c) => c.toUpperCase());
+      const text = term.replace(/\b\w/g, (c) => c.toUpperCase());
       const extra = cur.skills.find((c) => c.category === 'Additional');
-      const entry = { name: label, on: true, hit: true };
+      const entry = { name: text, on: true, hit: true };
       const skills = extra
         ? cur.skills.map((c) => (c === extra ? { ...c, on: true, skills: [...c.skills, entry] } : c))
         : [...cur.skills, { category: 'Additional', on: true, skills: [entry] }];
       return { ...cur, skills };
     });
 
-  const makeFile = () => {
-    const bytes = buildPdf(blocks, pdfOptions);
-    const fileName = pdfFileName(data?.personalInfo?.name ?? 'Resume', company || jobTitle);
-    return { bytes, fileName };
-  };
+  const makeFile = () => ({
+    bytes: buildPdf(blocks, pdfOptions),
+    fileName: pdfFileName(items?.header.name ?? 'Resume', company || jobTitle),
+  });
 
   const download = () => {
     if (!blocks.length) return;
@@ -442,15 +378,15 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
   };
 
   const save = async () => {
-    if (!data || !items || !blocks.length) return;
-    const label = name.trim() || [data.personalInfo.name, jobTitle || company].filter(Boolean).join(' - ') || 'Resume';
+    if (!items || !blocks.length) return;
+    const title = name.trim() || [items.header.name, jobTitle || company].filter(Boolean).join(' - ') || 'Resume';
     setSaving(true);
     try {
       const { bytes, fileName } = makeFile();
       const file = new File([new Uint8Array(bytes)], fileName, { type: 'application/pdf' });
       const description = [jobTitle && `Built for: ${jobTitle}`, company && `at ${company}`].filter(Boolean).join(' ') || 'Built in the resume builder';
-      const saved: Resume = await ResumeManager.uploadResume(file, label, description);
-      const recipe: ResumeRecipe = { version: 1, jobTitle, company, jd, items, order, options, savedAt: new Date().toISOString() };
+      const saved: Resume = await ResumeManager.uploadResume(file, title, description);
+      const recipe: ResumeRecipe = { version: 1, mode, jobTitle, company, jd, items, order, options, savedAt: new Date().toISOString() };
       // keep the choices with the record so the resume can be reopened; a failure here still leaves the PDF saved
       const extras = await ResumeManager.updateResume(saved.id, role ? { builder: recipe, role } : { builder: recipe });
       if (!extras) notify.info('The PDF was saved, but its builder choices could not be stored, so it cannot be reopened here.');
@@ -470,10 +406,10 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
 
   if (loadError) {
     return (
-      <Panel>
+      <Card>
         <p className="text-sm text-red-700">{loadError}</p>
         <button className={buttonClass} onClick={onClose}>Back to resumes</button>
-      </Panel>
+      </Card>
     );
   }
   if (!data) {
@@ -485,13 +421,102 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
   }
 
   const coverageColour = cov.percent >= 70 ? 'text-green-700' : cov.percent >= 40 ? 'text-amber-700' : 'text-red-700';
+  const counts = (list: PickItem[]) => `${list.filter((x) => x.on).length}/${list.length}`;
+
+  const sectionControls = (key: SectionKey) => {
+    const i = order.indexOf(key);
+    return (
+      <span className="flex shrink-0">
+        <IconButton label={`Move ${sectionTitle(items!, key) || 'section'} up`} disabled={i <= 0} onClick={() => moveSection(key, -1)}><ArrowUp size={14} /></IconButton>
+        <IconButton label={`Move ${sectionTitle(items!, key) || 'section'} down`} disabled={i < 0 || i >= order.length - 1} onClick={() => moveSection(key, 1)}><ArrowDown size={14} /></IconButton>
+      </span>
+    );
+  };
+
+  const headingField = (key: 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'achievements') => (
+    <Field
+      label="Heading in the resume"
+      value={items?.titles[key] ?? ''}
+      placeholder={sectionTitle({ ...items!, titles: {} }, key)}
+      onChange={(v) => patch({ titles: { ...items!.titles, [key]: v } })}
+      hint="Leave empty for the standard heading. ATS software knows the standard ones best."
+    />
+  );
+
+  const renderSection = (key: SectionKey) => {
+    if (!items) return null;
+    const title = sectionTitle(items, key) || 'Section';
+    if (key.startsWith('custom:')) {
+      const c = items.custom.find((x) => `custom:${x.id}` === key);
+      if (!c) return null;
+      const setC = (change: Partial<typeof c>) => patch({ custom: items.custom.map((x) => (x.id === c.id ? { ...x, ...change } : x)) });
+      return (
+        <Accordion key={key} title={title} badge="your section" open={open.has(key)} onToggle={() => toggle(key)} actions={<>{sectionControls(key)}<IconButton label="Delete section" danger onClick={() => removeCustom(c.id)}><Trash2 size={14} /></IconButton></>}>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" className="h-4 w-4 accent-purple-600" checked={c.on} onChange={(e) => setC({ on: e.target.checked })} /> Show this section
+          </label>
+          <Field label="Heading" value={c.title} onChange={(v) => setC({ title: v })} />
+          <LinesEditor lines={c.lines} onChange={(lines) => setC({ lines })} />
+        </Accordion>
+      );
+    }
+    const std = key as 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'achievements';
+    let badge: string | undefined;
+    let body: React.ReactNode = null;
+    if (std === 'summary') {
+      badge = items.summary.trim() ? 'on' : 'empty';
+      body = (
+        <>
+          <Field label="Summary" rows={5} value={items.summary} onChange={(v) => patch({ summary: v })} hint="A starting point built from your profile. Make it yours; leave it empty to drop the section." />
+          <button type="button" className="text-xs text-purple-700 hover:underline" onClick={() => patch({ summary: draftSummary(data.personalInfo, items.skills, jobTitle) })}>
+            Write it again from my profile
+          </button>
+        </>
+      );
+    } else if (std === 'skills') {
+      badge = `${items.skills.filter((c) => c.on).length}/${items.skills.length}`;
+      body = <SkillsEditor skills={items.skills} onChange={(skills) => patch({ skills })} />;
+    } else if (std === 'experience') {
+      badge = counts(items.experience);
+      body = <EntriesEditor list={items.experience} onChange={(l) => patch({ experience: l })} labels={{ left: 'Job title', right: 'Dates', sub: 'Company and location' }} addLabel="Add a job" />;
+    } else if (std === 'projects') {
+      badge = counts(items.projects);
+      body = <EntriesEditor list={items.projects} onChange={(l) => patch({ projects: l })} labels={{ left: 'Project name', right: 'Year', sub: 'Technologies line' }} addLabel="Add a project" />;
+    } else if (std === 'education') {
+      badge = counts(items.education);
+      body = <EntriesEditor list={items.education} onChange={(l) => patch({ education: l })} labels={{ left: 'School or college', right: 'Dates', sub: 'Degree and grade' }} addLabel="Add education" />;
+    } else if (std === 'certifications') {
+      badge = counts(items.certifications);
+      body = <OneLineEditor list={items.certifications} onChange={(l) => patch({ certifications: l })} addLabel="Add a certification" placeholder="Certificate name – issuer (year)" />;
+    } else {
+      badge = counts(items.achievements);
+      body = <OneLineEditor list={items.achievements} onChange={(l) => patch({ achievements: l })} addLabel="Add an achievement" placeholder="Achievement – what it was" />;
+    }
+    return (
+      <Accordion key={key} title={title} badge={badge} open={open.has(key)} onToggle={() => toggle(key)} actions={sectionControls(key)}>
+        {body}
+        {headingField(std)}
+      </Accordion>
+    );
+  };
+
+  const modeButton = (value: BuilderMode, text: string, icon: React.ReactNode) => (
+    <button
+      type="button"
+      aria-pressed={mode === value}
+      onClick={() => chooseMode(value)}
+      className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mode === value ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+    >
+      {icon} {text}
+    </button>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Resume builder</h2>
-          <p className="text-sm text-gray-500">Paste a job description, pick what to include, and get an ATS-friendly PDF. Your portfolio content is never changed.</p>
+          <p className="text-sm text-gray-500">Everything on the left can be edited. The preview on the right is the exact PDF. Your portfolio content is never changed.</p>
         </div>
         <button className={buttonClass} onClick={onClose}>
           <ArrowLeft size={16} /> Back to resumes
@@ -499,107 +524,93 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-        {/* ---- controls ---- */}
-        <div className="space-y-6">
-          <Panel title="1. The job" description="Paste the whole job description. Keywords are matched against your own skills and projects. Nothing is sent anywhere.">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className={labelClass} htmlFor="rb-title">Job title</label>
-                <input id="rb-title" className={inputClass} value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="Data Analyst" />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="rb-company">Company</label>
-                <input id="rb-company" className={inputClass} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Corp" />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass} htmlFor="rb-jd">Job description</label>
-              <textarea id="rb-jd" rows={8} className={inputClass} value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the job description here" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button className={primaryButtonClass} onClick={analyse}>
-                <Sparkles size={16} /> {items ? 'Analyse again' : 'Analyse and select'}
-              </button>
-              {items && (
-                <button className={buttonClass} onClick={startOver}>
-                  <RotateCcw size={16} /> Start over
-                </button>
-              )}
-            </div>
-          </Panel>
+        {/* ---- the left panel: everything that can be edited ---- */}
+        <div className="space-y-4">
+          <div role="group" aria-label="How to build" className="flex gap-1 rounded-xl bg-gray-100 p-1">
+            {modeButton('own', 'Build my own', <UserPen size={16} />)}
+            {modeButton('jd', 'From a job description', <Sparkles size={16} />)}
+          </div>
 
-          {items && (
+          {mode === 'jd' && (
             <>
-              <Panel title="2. Keywords" description="Checked against what is in the resume right now, so they update as you tick things.">
-                <div className="flex items-baseline gap-3">
-                  <span className={`text-3xl font-semibold ${coverageColour}`}>{keywords.length ? `${cov.percent}%` : '–'}</span>
-                  <span className="text-sm text-gray-500">{keywords.length ? 'of the weighted keywords are in the resume' : 'Paste a job description and analyse to see keyword coverage.'}</span>
+              <Card title="The job" description="Paste the whole job description. Keywords are matched against your own skills and projects. Nothing is sent anywhere.">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Job title" value={jobTitle} onChange={setJobTitle} placeholder="Data Analyst" />
+                  <Field label="Company" value={company} onChange={setCompany} placeholder="Acme Corp" />
                 </div>
-                {cov.matched.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 text-xs font-medium text-gray-700">In your resume</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {cov.matched.map((k) => (
-                        <span key={k.term} className="rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-xs text-green-800">{k.term}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {cov.missing.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 text-xs font-medium text-gray-700">Not in your resume yet</p>
-                    <p className="mb-1.5 text-xs text-gray-500">Only click <Plus size={10} className="inline" /> to add a skill you really have. A tick elsewhere may already cover it.</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {cov.missing.map((k) => (
-                        <button
-                          key={k.term}
-                          type="button"
-                          onClick={() => addSkill(k.term)}
-                          title={k.known ? 'A skill: add it to your skills if it is true for you' : 'A word the job description repeats'}
-                          className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs text-amber-900 hover:bg-amber-100"
-                        >
-                          {k.term} {k.known && <Plus size={10} />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Panel>
-
-              <Panel title="3. What goes in" description="Tick what to include. The best matches for the job are ticked for you. Edit a line to reword it for this resume only.">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-gray-900">Summary</h4>
-                    <button
-                      className="text-xs text-purple-700 hover:underline"
-                      onClick={() => setItems({ ...items, summary: draftSummary(data.personalInfo, items.skills, jobTitle) })}
-                    >
-                      Write it again from my profile
-                    </button>
-                  </div>
-                  <textarea rows={4} className={inputClass} aria-label="Summary" value={items.summary} onChange={(e) => setItems({ ...items, summary: e.target.value })} />
-                  <p className="text-xs text-gray-500">A starting point built from your profile. Make it yours, and leave it empty to drop the section.</p>
+                <Field label="Job description" rows={8} value={jd} onChange={setJd} placeholder="Paste the job description here" />
+                <div className="flex flex-wrap gap-2">
+                  <button className={primaryButtonClass} onClick={analyse}>
+                    <Sparkles size={16} /> {items ? 'Analyse again' : 'Analyse and select'}
+                  </button>
                 </div>
-                <SkillsGroup skills={items.skills} onChange={(skills) => setItems({ ...items, skills })} />
-                <ItemGroup title="Experience" list={items.experience} help="Each line is a bullet. Lines that match the job are ticked." onChange={(l) => setList('experience', l)} />
-                <ItemGroup title="Projects" list={items.projects} help="The three best matches are on. Only published projects are offered." onChange={(l) => setList('projects', l)} />
-                <ItemGroup title="Education" list={items.education} onChange={(l) => setList('education', l)} />
-                <ItemGroup title="Certifications" list={items.certifications} onChange={(l) => setList('certifications', l)} />
-                <ItemGroup title="Achievements" list={items.achievements} onChange={(l) => setList('achievements', l)} />
-              </Panel>
+              </Card>
 
-              <Panel title="4. Layout">
+              {items && (
+                <Card title="Keywords" description="Checked against what is in the resume right now, so they update as you edit.">
+                  <div className="flex items-baseline gap-3">
+                    <span className={`text-3xl font-semibold ${coverageColour}`}>{keywords.length ? `${cov.percent}%` : '–'}</span>
+                    <span className="text-sm text-gray-500">{keywords.length ? 'of the weighted keywords are in the resume' : 'Paste a job description and analyse to see keyword coverage.'}</span>
+                  </div>
+                  {cov.matched.length > 0 && (
+                    <div>
+                      <p className="mb-1.5 text-xs font-medium text-gray-700">In your resume</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cov.matched.map((k) => (
+                          <span key={k.term} className="rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-xs text-green-800">{k.term}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {cov.missing.length > 0 && (
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-gray-700">Not in your resume yet</p>
+                      <p className="mb-1.5 text-xs text-gray-500">Click a skill with <Plus size={10} className="inline" /> to add it, only if it is true for you.</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cov.missing.map((k) => (
+                          <button key={k.term} type="button" onClick={() => addSkill(k.term)} title={k.known ? 'A skill: add it to your skills if it is true for you' : 'A word the job description repeats'} className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs text-amber-900 hover:bg-amber-100">
+                            {k.term} {k.known && <Plus size={10} />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              )}
+            </>
+          )}
+
+          {items ? (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Edit your resume</h3>
+                <button className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600" onClick={startOver}>
+                  <RotateCcw size={13} /> Start over
+                </button>
+              </div>
+
+              <Accordion title="Header" badge={items.header.name ? undefined : 'name missing'} open={open.has('header')} onToggle={() => toggle('header')}>
+                <HeaderEditor header={items.header} onChange={(header) => patch({ header })} />
+              </Accordion>
+
+              {order.map((key) => renderSection(key))}
+
+              <button type="button" onClick={addCustom} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-600 hover:border-purple-400 hover:text-purple-700">
+                <FilePlus2 size={16} /> Add your own section (languages, volunteering, publications…)
+              </button>
+
+              <Card title="Layout">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>
-                    <label className={labelClass} htmlFor="rb-page">Paper</label>
-                    <select id="rb-page" className={inputClass} value={options.pageSize} onChange={(e) => setOptions({ ...options, pageSize: e.target.value as PageSize })}>
+                    <label className={label} htmlFor="rb-page">Paper</label>
+                    <select id="rb-page" className={select} value={options.pageSize} onChange={(e) => setOptions({ ...options, pageSize: e.target.value as PageSize })}>
                       <option value="letter">US Letter</option>
                       <option value="a4">A4</option>
                     </select>
                   </div>
                   <div>
-                    <label className={labelClass} htmlFor="rb-size">Text size</label>
-                    <select id="rb-size" className={inputClass} value={options.fontSize} onChange={(e) => setOptions({ ...options, fontSize: Number(e.target.value) })}>
+                    <label className={label} htmlFor="rb-size">Text size</label>
+                    <select id="rb-size" className={select} value={options.fontSize} onChange={(e) => setOptions({ ...options, fontSize: Number(e.target.value) })}>
                       <option value={9.5}>Small (9.5)</option>
                       <option value={10}>Compact (10)</option>
                       <option value={10.5}>Standard (10.5)</option>
@@ -607,73 +618,50 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
                     </select>
                   </div>
                   <div>
-                    <label className={labelClass} htmlFor="rb-density">Spacing</label>
-                    <select id="rb-density" className={inputClass} value={options.density} onChange={(e) => setOptions({ ...options, density: e.target.value as Density })}>
+                    <label className={label} htmlFor="rb-density">Spacing</label>
+                    <select id="rb-density" className={select} value={options.density} onChange={(e) => setOptions({ ...options, density: e.target.value as Density })}>
                       <option value="normal">Normal</option>
                       <option value="compact">Compact</option>
                     </select>
                   </div>
                 </div>
-                <div>
-                  <p className={labelClass}>Order of the sections</p>
-                  <ol className="space-y-1">
-                    {order.map((s, i) => (
-                      <li key={s} className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-1.5 text-sm">
-                        <span>{SECTION_TITLES[s]}</span>
-                        <span className="flex gap-1">
-                          <button className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Move ${SECTION_TITLES[s]} up`}>
-                            <ArrowUp size={14} />
-                          </button>
-                          <button className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30" disabled={i === order.length - 1} onClick={() => move(i, 1)} aria-label={`Move ${SECTION_TITLES[s]} down`}>
-                            <ArrowDown size={14} />
-                          </button>
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </Panel>
+              </Card>
             </>
+          ) : (
+            mode === 'own' && (
+              <div className="flex justify-center py-6">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-purple-500" />
+              </div>
+            )
           )}
         </div>
 
-        {/* ---- preview and checks ---- */}
+        {/* ---- the right panel: checks, saving and the exact pages ---- */}
         <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           {items ? (
             <>
-              <Panel title="ATS check" className="!space-y-2">
+              <Card title="ATS check" className="!space-y-2">
                 <ul className="space-y-1.5">
                   {checks.map((c) => (
                     <li key={c.id} className="flex items-start gap-2 text-sm text-gray-700">
-                      {c.level === 'ok' ? (
-                        <CircleCheck size={16} className="mt-0.5 shrink-0 text-green-600" />
-                      ) : c.level === 'warn' ? (
-                        <TriangleAlert size={16} className="mt-0.5 shrink-0 text-amber-600" />
-                      ) : (
-                        <CircleAlert size={16} className="mt-0.5 shrink-0 text-red-600" />
-                      )}
+                      {c.level === 'ok' ? <CircleCheck size={16} className="mt-0.5 shrink-0 text-green-600" /> : c.level === 'warn' ? <TriangleAlert size={16} className="mt-0.5 shrink-0 text-amber-600" /> : <CircleAlert size={16} className="mt-0.5 shrink-0 text-red-600" />}
                       <span>{c.text}</span>
                     </li>
                   ))}
                 </ul>
-              </Panel>
+              </Card>
 
-              <Panel className="!space-y-3">
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className={labelClass} htmlFor="rb-name">Name in the resume list</label>
-                      <input id="rb-name" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={[data.personalInfo.name, jobTitle || company].filter(Boolean).join(' - ')} />
-                    </div>
-                    <div>
-                      <label className={labelClass} htmlFor="rb-role">Written for role</label>
-                      <select id="rb-role" className={inputClass} value={role} onChange={(e) => setRole(e.target.value)}>
-                        <option value="">Any role</option>
-                        {roles.map((r) => (
-                          <option key={r.id} value={r.id}>{r.label}</option>
-                        ))}
-                      </select>
-                    </div>
+              <Card className="!space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Name in the resume list" value={name} onChange={setName} placeholder={[items.header.name, jobTitle || company].filter(Boolean).join(' - ')} />
+                  <div>
+                    <label className={label} htmlFor="rb-role">Written for role</label>
+                    <select id="rb-role" className={select} value={role} onChange={(e) => setRole(e.target.value)}>
+                      <option value="">Any role</option>
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>{r.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -684,15 +672,15 @@ export default function ResumeBuilder({ initialRecipe, onClose, onSaved }: Props
                     <Save size={16} /> {saving ? 'Saving…' : 'Save to my resumes'}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">Saving stores the PDF in your resume storage as a private resume, with your choices, so you can reopen and change it later. Each save is a new resume.</p>
-              </Panel>
+                <p className="text-xs text-gray-500">Saving stores the PDF in your resume storage as a private resume, with your edits, so you can reopen it later. Each save is a new resume.</p>
+              </Card>
 
               <PagePreview {...laid} />
             </>
           ) : (
-            <Panel title="Preview">
+            <Card title="Preview">
               <p className="text-sm text-gray-500">The resume appears here after you click “Analyse and select”. You can click it with an empty job description too, to start from everything in your portfolio.</p>
-            </Panel>
+            </Card>
           )}
         </div>
       </div>

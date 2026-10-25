@@ -175,20 +175,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const siteLink = SITE_ANCHOR[pathname] ?? '/';
+  const pageTitle = menuGroups.flatMap((g) => g.items).find((item) => isActive(item.href) && (item.href !== '/admin' || pathname === '/admin'))?.title ?? 'Admin';
 
   return (
     <FeedbackProvider>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-slate-50">
         {/* Sidebar */}
         <div
           className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 flex w-64 max-w-[80vw] flex-col overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:max-w-none lg:translate-x-0`}
         >
           <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-sm shadow-purple-500/30">
                 <Database className="h-5 w-5 text-white" />
               </div>
-              <span className="text-lg font-semibold text-gray-900">Admin Panel</span>
+              <div className="leading-tight">
+                <span className="block text-base font-semibold tracking-tight text-gray-900">Admin Panel</span>
+                <span className="block text-xs text-gray-500">Portfolio studio</span>
+              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -203,7 +207,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {menuGroups.map((group, index) => (
               <div key={group.title ?? index}>
                 {group.title && (
-                  <p className="mb-1.5 px-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                  <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
                     {group.title}
                   </p>
                 )}
@@ -213,13 +217,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       key={item.href}
                       href={item.href}
                       aria-current={isActive(item.href) ? 'page' : undefined}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                         isActive(item.href)
-                          ? 'bg-purple-100 text-purple-700'
+                          ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-100'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }`}
                     >
-                      <item.icon size={18} />
+                      <item.icon size={18} className={isActive(item.href) ? 'text-purple-600' : 'text-gray-400 group-hover:text-gray-600'} />
                       {item.title}
                     </a>
                   ))}
@@ -261,7 +265,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Main content */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {/* Top bar */}
-          <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white/80 px-4 backdrop-blur lg:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 text-gray-500 hover:text-gray-700 lg:hidden"
@@ -270,12 +274,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Menu size={20} />
             </button>
 
+            <p className="ml-2 hidden truncate text-sm font-semibold text-gray-900 sm:block lg:ml-0">{pageTitle}</p>
+
             <div className="ml-auto flex items-center gap-2">
               <a
                 href={siteLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
                 title="Open the public site at the place this page controls"
               >
                 <ExternalLink size={16} aria-hidden="true" />
@@ -286,7 +292,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 type="button"
                 aria-pressed={previewOpen}
                 onClick={() => setPreview(!previewOpen)}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium ${
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-sm ${
                   previewOpen
                     ? 'border-purple-600 bg-purple-600 text-white'
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'

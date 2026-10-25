@@ -4,6 +4,8 @@ import type { BuilderItems, SectionKey } from './source';
 
 export interface ResumeRecipe {
   version: 1;
+  // how it was started; older saved resumes do not have it
+  mode?: 'own' | 'jd';
   jobTitle: string;
   company: string;
   jd: string;

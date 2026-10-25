@@ -4,11 +4,13 @@ import type { Achievement, Certification, Education, Experience, PersonalInfo, P
 import { matchText, type Keyword } from './keywords';
 import type { DocBlock, Run } from './pdf';
 
-export type SectionKey = 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'achievements';
+export type StdSection = 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'achievements';
+// the standard sections, plus the sections the admin adds ("custom:<id>")
+export type SectionKey = StdSection | `custom:${string}`;
 
 export const DEFAULT_ORDER: SectionKey[] = ['summary', 'skills', 'experience', 'projects', 'education', 'certifications', 'achievements'];
 
-export const SECTION_TITLES: Record<SectionKey, string> = {
+export const SECTION_TITLES: Record<StdSection, string> = {
   summary: 'Summary',
   skills: 'Skills',
   experience: 'Experience',
@@ -40,7 +42,30 @@ export interface SkillPick {
   skills: { name: string; on: boolean; hit: boolean }[];
 }
 
+// the details at the top of the resume; edited here without touching the profile
+export interface ResumeHeader {
+  name: string;
+  headline: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  github: string;
+  links: { label: string; url: string }[];
+}
+
+export interface CustomSection {
+  id: string;
+  title: string;
+  on: boolean;
+  lines: PickLine[];
+}
+
 export interface BuilderItems {
+  header: ResumeHeader;
+  // headings the admin renamed ("Work history" instead of "Experience")
+  titles: Partial<Record<StdSection, string>>;
+  custom: CustomSection[];
   summary: string;
   skills: SkillPick[];
   experience: PickItem[];
@@ -58,6 +83,59 @@ export interface SourceData {
   education: Education[];
   certifications: Certification[];
   achievements: Achievement[];
+}
+
+export function headerFrom(p: PersonalInfo): ResumeHeader {
+  return {
+    name: p?.name ?? '',
+    headline: '',
+    email: p?.email ?? '',
+    phone: p?.phone ?? '',
+    location: p?.location ?? '',
+    linkedin: p?.linkedin ?? '',
+    github: p?.github ?? '',
+    links: (p?.links ?? []).map((l) => ({ label: l.label, url: l.url })),
+  };
+}
+
+// Fills what older saved resumes do not have
+export function normaliseItems(items: Partial<BuilderItems>, personal: PersonalInfo): BuilderItems {
+  return {
+    header: { ...headerFrom(personal), ...(items.header ?? {}) },
+    titles: items.titles ?? {},
+    custom: items.custom ?? [],
+    summary: items.summary ?? '',
+    skills: items.skills ?? [],
+    experience: items.experience ?? [],
+    projects: items.projects ?? [],
+    education: items.education ?? [],
+    certifications: items.certifications ?? [],
+    achievements: items.achievements ?? [],
+  };
+}
+
+export function newItem(): PickItem {
+  return { key: `new:${Date.now()}${Math.random().toString(36).slice(2, 7)}`, on: true, left: '', right: '', sub: '', lines: [], score: 0 };
+}
+
+export function newLine(text = ''): PickLine {
+  return { text, on: true, score: 0 };
+}
+
+export function newCustomSection(): CustomSection {
+  return { id: `${Date.now()}${Math.random().toString(36).slice(2, 7)}`, title: 'New section', on: true, lines: [newLine()] };
+}
+
+// Everything offered with nothing ranked: the owner ticks what to include
+export function ownSelect(data: SourceData): BuilderItems {
+  const base = autoSelect(data, [], '');
+  return {
+    ...base,
+    experience: base.experience.map((e) => ({ ...e, lines: e.lines.map((l) => ({ ...l, on: true })) })),
+    projects: base.projects.map((p) => ({ ...p, on: false })),
+    certifications: base.certifications.map((c) => ({ ...c, on: false })),
+    achievements: base.achievements.map((a) => ({ ...a, on: false })),
+  };
 }
 
 // ---------- text helpers ----------
@@ -228,6 +306,9 @@ export function autoSelect(data: SourceData, keywords: Keyword[], headline: stri
     });
 
   return {
+    header: headerFrom(data.personalInfo),
+    titles: {},
+    custom: [],
     summary: draftSummary(data.personalInfo, skills, headline),
     skills,
     experience,
@@ -260,14 +341,14 @@ function toUrl(value: string): string {
   return /^https?:\/\//i.test(v) ? v : `https://${v}`;
 }
 
-export function contactRuns(p: PersonalInfo, extra: { label: string; url: string }[] = []): Run[] {
+export function contactRuns(h: ResumeHeader): Run[] {
   const parts: Run[][] = [];
-  if (p.email) parts.push([{ text: p.email, url: `mailto:${p.email}` }]);
-  if (p.phone) parts.push([{ text: p.phone }]);
-  if (p.location) parts.push([{ text: p.location }]);
-  if (p.linkedin) parts.push([{ text: webLabel(p.linkedin), url: toUrl(p.linkedin) }]);
-  if (p.github) parts.push([{ text: webLabel(p.github), url: toUrl(p.github) }]);
-  for (const l of extra) if (l.url) parts.push([{ text: webLabel(l.url), url: toUrl(l.url) }]);
+  if (h.email.trim()) parts.push([{ text: h.email.trim(), url: `mailto:${h.email.trim()}` }]);
+  if (h.phone.trim()) parts.push([{ text: h.phone.trim() }]);
+  if (h.location.trim()) parts.push([{ text: h.location.trim() }]);
+  if (h.linkedin.trim()) parts.push([{ text: webLabel(h.linkedin.trim()), url: toUrl(h.linkedin) }]);
+  if (h.github.trim()) parts.push([{ text: webLabel(h.github.trim()), url: toUrl(h.github) }]);
+  for (const l of h.links) if (l.url.trim()) parts.push([{ text: webLabel(l.url.trim()), url: toUrl(l.url) }]);
   const out: Run[] = [];
   parts.forEach((part, i) => {
     if (i > 0) out.push({ text: '  |  ' });
@@ -276,50 +357,65 @@ export function contactRuns(p: PersonalInfo, extra: { label: string; url: string
   return out;
 }
 
-export function buildBlocks(
-  personal: PersonalInfo,
-  items: BuilderItems,
-  order: SectionKey[] = DEFAULT_ORDER,
-  extraLinks: { label: string; url: string }[] = []
-): DocBlock[] {
+export function sectionTitle(items: BuilderItems, key: SectionKey): string {
+  if (key.startsWith('custom:')) return items.custom.find((c) => `custom:${c.id}` === key)?.title ?? '';
+  const std = key as StdSection;
+  return (items.titles[std] ?? '').trim() || SECTION_TITLES[std];
+}
+
+export function buildBlocks(items: BuilderItems, order: SectionKey[] = DEFAULT_ORDER): DocBlock[] {
   const blocks: DocBlock[] = [];
-  blocks.push({ kind: 'name', text: personal?.name ?? '' });
-  const contact = contactRuns(personal, extraLinks);
+  const h = items.header;
+  blocks.push({ kind: 'name', text: h.name });
+  if (h.headline.trim()) blocks.push({ kind: 'tagline', text: h.headline.trim() });
+  const contact = contactRuns(h);
   if (contact.length) blocks.push({ kind: 'contact', runs: contact });
 
   const entries = (list: PickItem[]) => {
     for (const it of list.filter((x) => x.on)) {
+      if (!it.left.trim() && !it.right.trim() && !it.sub.trim() && !it.lines.some((l) => l.on && l.text.trim())) continue;
       blocks.push({ kind: 'entry', left: it.left, right: it.right || undefined, sub: it.sub || undefined });
       for (const l of it.lines.filter((x) => x.on && x.text.trim())) blocks.push({ kind: 'bullet', runs: [{ text: l.text.trim() }] });
     }
   };
 
   for (const section of order) {
-    if (section === 'summary') {
+    const title = sectionTitle(items, section);
+    if (section.startsWith('custom:')) {
+      const c = items.custom.find((x) => `custom:${x.id}` === section);
+      const lines = c?.on ? c.lines.filter((l) => l.on && l.text.trim()) : [];
+      if (c && lines.length) {
+        blocks.push({ kind: 'heading', text: title || 'Section' });
+        for (const l of lines) blocks.push({ kind: 'bullet', runs: [{ text: l.text.trim() }] });
+      }
+    } else if (section === 'summary') {
       if (items.summary.trim()) {
-        blocks.push({ kind: 'heading', text: SECTION_TITLES.summary });
+        blocks.push({ kind: 'heading', text: title });
         blocks.push({ kind: 'text', runs: [{ text: items.summary.trim() }] });
       }
     } else if (section === 'skills') {
       const rows = items.skills
         .filter((c) => c.on)
-        .map((c) => ({ category: c.category, names: c.skills.filter((s) => s.on).map((s) => s.name) }))
+        .map((c) => ({ category: c.category.trim(), names: c.skills.filter((s) => s.on && s.name.trim()).map((s) => s.name.trim()) }))
         .filter((c) => c.names.length);
       if (rows.length) {
-        blocks.push({ kind: 'heading', text: SECTION_TITLES.skills });
-        for (const r of rows) blocks.push({ kind: 'text', runs: [{ text: `${r.category}: `, bold: true }, { text: r.names.join(', ') }] });
+        blocks.push({ kind: 'heading', text: title });
+        for (const r of rows)
+          blocks.push({ kind: 'text', runs: [...(r.category ? [{ text: `${r.category}: `, bold: true }] : []), { text: r.names.join(', ') }] });
       }
     } else if (section === 'experience' || section === 'projects' || section === 'education') {
       const list = items[section];
       if (list.some((x) => x.on)) {
-        blocks.push({ kind: 'heading', text: SECTION_TITLES[section] });
+        const start = blocks.length;
+        blocks.push({ kind: 'heading', text: title });
         entries(list);
+        if (blocks.length === start + 1) blocks.pop();
       }
     } else {
-      const list = items[section].filter((x) => x.on);
+      const list = items[section as 'certifications' | 'achievements'].filter((x) => x.on);
       const lines = list.flatMap((x) => x.lines.filter((l) => l.on && l.text.trim()));
       if (lines.length) {
-        blocks.push({ kind: 'heading', text: SECTION_TITLES[section] });
+        blocks.push({ kind: 'heading', text: title });
         for (const l of lines) blocks.push({ kind: 'bullet', runs: [{ text: l.text.trim() }] });
       }
     }
@@ -332,7 +428,7 @@ export function blocksText(blocks: DocBlock[]): string {
   const parts: string[] = [];
   for (const b of blocks) {
     if (b.kind === 'entry') parts.push(b.left, b.sub ?? '');
-    else if (b.kind === 'name' || b.kind === 'heading') parts.push(b.text);
+    else if (b.kind === 'name' || b.kind === 'heading' || b.kind === 'tagline') parts.push(b.text);
     else parts.push(b.runs.map((r) => r.text).join(''));
   }
   return parts.join('\n');

@@ -15,6 +15,7 @@ export const IMAGE_LIMITS: Record<UploadKind, { maxSide: number; quality: number
   project: { maxSide: 2000, quality: 0.9 },
   certificate: { maxSide: 2400, quality: 0.9 },
   achievement: { maxSide: 2000, quality: 0.9 },
+  moment: { maxSide: 1600, quality: 0.88 },
 };
 
 const SMALL_ENOUGH = 1.2 * 1024 * 1024;

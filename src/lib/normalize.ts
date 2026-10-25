@@ -15,6 +15,8 @@ import { mergeSiteSettings } from './siteSettings';
 import { normaliseMedia, normaliseMediaList } from './media';
 import { toWebUrl } from './url';
 import type {
+  Moment,
+  MomentFrequency,
   Achievement,
   Certification,
   Education,
@@ -195,6 +197,44 @@ const ACHIEVEMENT_CATEGORIES: AchievementCategory[] = [
   'other',
 ];
 
+export const MOMENT_FREQUENCIES: MomentFrequency[] = ['once', 'session', 'daily'];
+
+const asDay = (value: unknown): string => {
+  const text = asText(value).trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
+};
+
+export function normaliseMoments(value: unknown): Moment[] {
+  return asArray<Record<string, unknown>>(value)
+    .filter((m) => isObject(m) && asText(m.title))
+    .map((m, index) => {
+      const popup = isObject(m.popup) ? (m.popup as Record<string, unknown>) : {};
+      const delay = Number(popup.delay);
+      const link = isObject(m.link) ? normaliseLinks([m.link])[0] : undefined;
+      return {
+        id: (m.id as string | number | undefined) ?? index,
+        title: asText(m.title).trim().slice(0, 120),
+        text: asText(m.text).trim().slice(0, 400),
+        year: asText(m.year).trim().slice(0, 4),
+        image: normaliseMedia(m.image) ?? undefined,
+        imageAlt: asText(m.imageAlt).trim().slice(0, 160) || undefined,
+        link,
+        strip: m.strip !== false,
+        popup: {
+          enabled: popup.enabled === true,
+          start: asDay(popup.start),
+          end: asDay(popup.end),
+          delay: Number.isFinite(delay) ? Math.min(60, Math.max(0, Math.round(delay))) : 4,
+          frequency: MOMENT_FREQUENCIES.includes(popup.frequency as MomentFrequency)
+            ? (popup.frequency as MomentFrequency)
+            : 'once',
+        },
+        published: m.published !== false,
+        updatedAt: asText(m.updatedAt).slice(0, 40) || undefined,
+      };
+    });
+}
+
 export function normaliseAchievements(value: unknown): Achievement[] {
   return asArray<Record<string, unknown>>(value)
     .filter((a) => isObject(a) && asText(a.title))
@@ -304,6 +344,7 @@ export const SECTION_NAMES = [
   'education',
   'certifications',
   'achievements',
+  'moments',
   'quickFacts',
   'currentFocus',
   'recommendations',
@@ -344,6 +385,9 @@ export function buildContent(
     achievements: normaliseAchievements(
       has('achievements') ? sections.achievements : ACHIEVEMENTS
     ).filter((achievement) => everything || achievement.published !== false),
+    moments: normaliseMoments(sections.moments).filter(
+      (moment) => everything || moment.published !== false
+    ),
     currentFocus: normaliseFocus(has('currentFocus') ? sections.currentFocus : CURRENT_FOCUS),
     recommendations: normaliseRecommendations(sections.recommendations),
     quickFacts: normaliseQuickFacts(has('quickFacts') ? sections.quickFacts : QUICK_FACTS),

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  Images,
   Award,
   Briefcase,
   Clock,
@@ -32,6 +33,7 @@ const ICONS: Record<SectionId, LucideIcon> = {
   education: GraduationCap,
   certifications: Award,
   achievements: Trophy,
+  moments: Images,
   recommendations: Quote,
   work: Handshake,
   contact: Mail,

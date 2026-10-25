@@ -10,6 +10,7 @@ export const PORTFOLIO_SECTIONS = [
   'education',
   'certifications',
   'achievements',
+  'moments',
   'quickFacts',
   'currentFocus',
   'recommendations',

@@ -384,6 +384,23 @@ export const HELP_TOPICS: HelpTopic[] = [
     words: ['awards', 'hackathon', 'honours'],
   },
   {
+    id: 'moments',
+    area: 'Proof and contact',
+    title: 'Moments: pictures by year, and popups',
+    seen: 'A strip of pictures grouped by year. Hover a picture (or tap it on a phone) to read a few words; select it to open it larger. A moment can also open as a polite popup.',
+    anchor: '/#moments',
+    from: 'Moments: title, a few words, year, picture, an optional link, and the popup settings. The whole feature is off until you switch it on.',
+    steps: [
+      { text: 'Add a moment: title, a few words, year and a picture. Save it as a draft or publish it.', href: '/admin/moments' },
+      { text: 'Switch the feature on under Appearance > Other features > Moments. Switch it off to hide the strip and every popup (nothing you wrote is lost).', href: A.appearance },
+      { text: 'For a popup: tick "Also show as a popup" on the moment, choose the first and last day (optional), the delay and how often. "Once on each device" is the default, so nobody sees it again and again; editing the moment shows it once more.' },
+      { text: 'Rename the buttons, and the section heading, in Text and labels.', href: A.text },
+      { text: 'To remove the whole feature from the code, ask for it to be reverted: it was added in one separate change.' },
+    ],
+    textKeys: ['moments.open'],
+    words: ['popup', 'pop up', 'hover', 'image', 'year', 'announcement', 'milestone'],
+  },
+  {
     id: 'recommendations',
     area: 'Proof and contact',
     title: 'Recommendations wall',
@@ -570,6 +587,19 @@ HELP_TOPICS.push(
       { text: 'Publish it. A draft and its files stay private.' },
     ],
     words: ['upload', 'photos', 'documents'],
+  },
+  {
+    id: 'upload-moment',
+    area: 'Uploading files',
+    title: 'Upload a picture for a moment',
+    seen: 'The picture on the yearly strip and in the popup.',
+    anchor: '/#moments',
+    from: 'Stored privately; shown only while the moment is published and Moments is switched on.',
+    steps: [
+      { text: 'Open Moments, add or edit one and upload under Picture. JPEG, PNG, WebP or GIF, up to 4 MB. The type is checked from the file itself.', href: '/admin/moments' },
+      { text: 'Add a short description of the picture for screen readers, then save.' },
+    ],
+    words: ['upload', 'picture', 'popup'],
   },
   {
     id: 'upload-resume',

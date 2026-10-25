@@ -16,6 +16,7 @@ export function collectFiles(content: PortfolioContent): Map<string, MediaFile> 
   content.projects.forEach((project) => (project.media ?? []).forEach(add));
   content.certifications.forEach((certificate) => add(certificate.file));
   content.achievements.forEach((achievement) => (achievement.media ?? []).forEach(add));
+  content.moments.forEach((moment) => add(moment.image));
   return files;
 }
 

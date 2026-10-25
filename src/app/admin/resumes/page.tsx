@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
+import { Wand2, Upload, Download, Edit, Trash2, FileText, Plus, Save, X, Eye, Cloud, HardDrive, Globe, Lock, ShieldCheck } from 'lucide-react';
 import { Resume, getPortfolioData } from '@/lib/dataManager';
 import { ResumeManager } from '@/lib/resumeManager';
 import { mergeSiteSettings } from '@/lib/siteSettings';
 import type { RoleDef } from '@/lib/types';
 import AdminLayout from '@/components/AdminLayout';
+import ResumeBuilder from '@/components/admin/ResumeBuilder';
+import { isRecipe, type ResumeRecipe } from '@/lib/resume/recipe';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
 const textareaStyles = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm resize-none";
@@ -17,6 +19,9 @@ export default function ResumesAdmin() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [cloudFiles, setCloudFiles] = useState<any[]>([]);
   const [showCloudModal, setShowCloudModal] = useState(false);
+  // the resume builder replaces the list while it is open
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderRecipe, setBuilderRecipe] = useState<ResumeRecipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -310,6 +315,23 @@ export default function ResumesAdmin() {
     );
   }
 
+  if (builderOpen) {
+    return (
+      <AdminLayout>
+        <div className="max-w-7xl mx-auto">
+          <ResumeBuilder
+            initialRecipe={builderRecipe}
+            onClose={() => setBuilderOpen(false)}
+            onSaved={() => {
+              setBuilderOpen(false);
+              loadResumes();
+            }}
+          />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto">
@@ -326,6 +348,17 @@ export default function ResumesAdmin() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setBuilderRecipe(null);
+                  setBuilderOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                title="Build an ATS-friendly resume from a job description"
+              >
+                <Wand2 size={16} />
+                Build from JD
+              </button>
               <button
                 onClick={testConnection}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm text-sm"
@@ -654,6 +687,18 @@ export default function ResumesAdmin() {
                       >
                         <Download size={16} />
                       </button>
+                      {isRecipe(resume.builder) && (
+                        <button
+                          onClick={() => {
+                            setBuilderRecipe(resume.builder as ResumeRecipe);
+                            setBuilderOpen(true);
+                          }}
+                          className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Open in the resume builder"
+                        >
+                          <Wand2 size={16} />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(resume, index)}
                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

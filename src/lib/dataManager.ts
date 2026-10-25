@@ -12,6 +12,7 @@ import {
   SITE_SETTINGS
 } from './data';
 import { mergeSiteSettings } from './siteSettings';
+import type { ResumeRecipe } from './resume/recipe';
 import type { Achievement, Certification, PersonalInfo, Project, Recommendation, SiteSettings } from './types';
 
 export interface Resume {
@@ -29,6 +30,7 @@ export interface Resume {
   storageType: 'local' | 'cloud'; // Storage location indicator
   isPublic?: boolean; // Only public resumes are offered to site visitors
   role?: string; // The role a resume is written for ('' = any role)
+  builder?: ResumeRecipe; // Set when the resume was made in the resume builder, so it can be reopened there
 }
 
 export interface PortfolioData {

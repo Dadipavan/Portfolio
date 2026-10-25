@@ -346,3 +346,16 @@ empty gap.
 | Older certificate pictures | The public bucket `certificates` (the picture's web address is saved with the certificate) | Still shown; removed from the bucket when you replace or remove them |
 | Contact messages | The `contact_messages` table | Unchanged |
 | Visit counts | The `site_events` table (no personal data) | Unchanged |
+
+---
+
+## 9. Resume builder (Admin > Resumes > Build from JD)
+
+Paste a job description and get an ATS-friendly PDF made from your own content. Nothing in your portfolio is changed.
+
+1. **Analyse**: the keywords the job description repeats are found (your own skills and projects are used as the word list). No AI, no network.
+2. **Pick**: experience, projects, skills, education, certificates and achievements come as tick-boxes. The best matches are ticked for you; each line can be reworded for this resume only.
+3. **Check**: the page preview is the exact PDF layout. The keyword percentage and the ATS checks (length, contact details, numbers in bullets) update as you tick.
+4. **Save**: *Download PDF*, or *Save to my resumes* (stored in your `resumes` bucket as a private resume; make it public in the list if you want visitors to get it). Resumes made here have a wand button to reopen them in the builder.
+
+The PDF is one column of real text in Helvetica with standard headings, so ATS software can read it. No Supabase change is needed.

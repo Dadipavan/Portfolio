@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RotateCcw, Search, Type } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import AdminLoadError from '@/components/AdminLoadError';
@@ -28,6 +28,11 @@ export default function TextAdmin() {
     useMemo(() => [...OWNED], [])
   );
   const [search, setSearch] = useState('');
+  // the Help page links here with ?find=<wording> to open the page already searching
+  useEffect(() => {
+    const find = new URLSearchParams(window.location.search).get('find');
+    if (find) setSearch(find);
+  }, []);
   const groups = useMemo(() => copyGroups(), []);
 
   if (loadError) {

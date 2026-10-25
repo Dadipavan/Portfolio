@@ -8,6 +8,7 @@ import FeedbackProvider from '@/components/admin/Feedback';
 import {
   Award,
   Camera,
+  CircleHelp,
   Briefcase,
   ChartLine,
   Code,
@@ -73,6 +74,10 @@ const menuGroups = [
       { title: 'Content map', href: '/admin/map', icon: ListChecks },
     ],
   },
+  {
+    title: 'Guide',
+    items: [{ title: 'Help', href: '/admin/help', icon: CircleHelp }],
+  },
 ];
 
 // Where on the public site each admin page's content appears
@@ -95,6 +100,7 @@ const SITE_ANCHOR: Record<string, string> = {
   '/admin/map': '/',
   '/admin/messages': '/#contact',
   '/admin/insights': '/',
+  '/admin/help': '/',
 };
 
 const PREVIEW_KEY = 'admin-preview-open';

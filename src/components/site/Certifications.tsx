@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Award, BadgeCheck, Download, ExternalLink as OpenIcon, FileText } from 'lucide-react';
 import { isPdf, isPdfUrl, mediaDownloadUrl, mediaUrl } from '@/lib/media';
 import type { Certification } from '@/lib/types';
 import ExternalLink from './ExternalLink';
 import Markdown from './Markdown';
 import Modal from './Modal';
+import Pager from './Pager';
 import { usePortfolio } from './PortfolioProvider';
 import Section from './Section';
 import Tag from './Tag';
@@ -32,6 +33,9 @@ function previewOf(
   }
   return null;
 }
+
+// certificates shown at a time (one row of the grid)
+export const CERTS_PER_PAGE = 3;
 
 const dateOf = (item: Certification) => item.issueDate || item.year || '';
 
@@ -155,6 +159,27 @@ export default function Certifications({ number }: { number: string }) {
   const items = content.certifications;
   const additional = content.siteSettings.additionalCertifications;
   const [open, setOpen] = useState<number | null>(null);
+  const pages = Math.max(1, Math.ceil(items.length / CERTS_PER_PAGE));
+  const [page, setPage] = useState(0);
+  const current = Math.min(page, pages - 1);
+  const start = current * CERTS_PER_PAGE;
+
+  // a link to one certificate (#certification-4) opens the page that holds it
+  useEffect(() => {
+    const reveal = () => {
+      const match = window.location.hash.match(/^#certification-(\d+)$/);
+      if (match && Number(match[1]) < items.length)
+        setPage(Math.floor(Number(match[1]) / CERTS_PER_PAGE));
+    };
+    reveal();
+    window.addEventListener('hashchange', reveal);
+    return () => window.removeEventListener('hashchange', reveal);
+  }, [items.length]);
+
+  const go = (target: number) => {
+    setPage(Math.min(Math.max(target, 0), pages - 1));
+    document.getElementById('certifications')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
 
   const action =
     'inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-line bg-card px-3 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface';
@@ -163,7 +188,8 @@ export default function Certifications({ number }: { number: string }) {
     <Section id="certifications" number={number}>
       {items.length > 0 && (
         <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, index) => {
+          {items.slice(start, start + CERTS_PER_PAGE).map((item, offset) => {
+            const index = start + offset;
             const preview = previewOf(item);
             const date = dateOf(item);
             const hasMore = Boolean(preview || item.description || item.credentialId);
@@ -262,6 +288,7 @@ export default function Certifications({ number }: { number: string }) {
           })}
         </ul>
       )}
+      <Pager label="Certification pages" pages={pages} current={current} onChange={go} />
 
       {additional.length > 0 && (
         <div className={`card p-6 sm:p-8 ${items.length > 0 ? 'mt-10' : ''}`}>

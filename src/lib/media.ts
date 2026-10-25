@@ -6,13 +6,14 @@ import type { MediaFile } from './types';
 export const MEDIA_BUCKET = 'portfolio-files';
 
 // What an upload is for. Each purpose has its own folder and its own rules.
-export type UploadKind = 'photo' | 'project' | 'certificate' | 'achievement';
+export type UploadKind = 'photo' | 'project' | 'certificate' | 'achievement' | 'logo';
 
 export const UPLOAD_FOLDERS: Record<UploadKind, string> = {
   photo: 'profile',
   project: 'projects',
   certificate: 'certificates',
   achievement: 'achievements',
+  logo: 'logos',
 };
 
 const MB = 1024 * 1024;
@@ -41,6 +42,7 @@ export const UPLOAD_RULES: Record<UploadKind, UploadRules> = {
     maxBytes: 4 * MB,
     label: 'a picture or a PDF up to 4 MB',
   },
+  logo: { types: IMAGES, maxBytes: 4 * MB, label: 'a JPG, PNG, WebP or GIF logo up to 4 MB' },
 };
 
 export const EXTENSIONS: Record<string, string> = {
@@ -102,7 +104,7 @@ export function checkUpload(kind: UploadKind, size: number, head: Uint8Array): U
 
 // "projects/3f2a9c1e-5b7d-4e21-9a8c-0d1f2e3a4b5c.webp"
 const PATH_PATTERN =
-  /^(profile|projects|certificates|achievements)\/[a-f0-9-]{8,40}\.(jpg|png|webp|gif|pdf)$/;
+  /^(profile|projects|certificates|achievements|logos)\/[a-f0-9-]{8,40}\.(jpg|png|webp|gif|pdf)$/;
 
 export const isMediaPath = (value: unknown): value is string =>
   typeof value === 'string' && PATH_PATTERN.test(value);

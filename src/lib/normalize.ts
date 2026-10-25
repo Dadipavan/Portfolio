@@ -149,6 +149,10 @@ export function normaliseExperience(value: unknown): Experience[] {
       period: asText(e.period),
       type: asText(e.type),
       description: typeof e.description === 'string' ? [e.description] : asStrings(e.description),
+      logo: normaliseMedia(e.logo) ?? undefined,
+      website: toWebUrl(e.website),
+      summary: asText(e.summary).trim().slice(0, 400),
+      skills: asStrings(e.skills).slice(0, 20),
     }));
 }
 

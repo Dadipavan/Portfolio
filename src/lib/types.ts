@@ -129,6 +129,14 @@ export interface Experience {
   period: string;
   type?: string;
   description: string[];
+  // the company's logo, uploaded in the admin
+  logo?: MediaFile;
+  // the company's website
+  website?: string;
+  // one line shown above the bullet points
+  summary?: string;
+  // skills and tools used in the role, shown as tags
+  skills?: string[];
 }
 
 export interface Education {

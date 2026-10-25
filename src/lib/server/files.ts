@@ -13,6 +13,7 @@ export function collectFiles(content: PortfolioContent): Map<string, MediaFile> 
   };
 
   add(content.personalInfo.photo?.file);
+  content.experience.forEach((job) => add(job.logo));
   content.projects.forEach((project) => (project.media ?? []).forEach(add));
   content.certifications.forEach((certificate) => add(certificate.file));
   content.achievements.forEach((achievement) => (achievement.media ?? []).forEach(add));

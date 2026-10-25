@@ -700,6 +700,15 @@ const otherFields = [
     label: 'Heading: about the certificate',
     text: 'About this certificate',
   },
+  { key: 'exp.visit', group: 'Experience', label: 'Link: visit the company website', text: 'Visit website' },
+  { key: 'exp.more', group: 'Experience', label: 'Button: show all points of a role', text: 'View more' },
+  { key: 'exp.less', group: 'Experience', label: 'Button: show fewer points of a role', text: 'View less' },
+  {
+    key: 'exp.responsibilities',
+    group: 'Experience',
+    label: 'Heading: points of a role',
+    text: 'Key responsibilities',
+  },
   { key: 'certs.issuer', group: 'Certifications', label: 'Label: issued by', text: 'Issued by' },
   { key: 'certs.issued', group: 'Certifications', label: 'Label: date issued', text: 'Issued' },
   {

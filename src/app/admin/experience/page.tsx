@@ -6,7 +6,12 @@ import { Building2, Plus, Edit, Trash2, Briefcase, Save, X, ChevronUp, ChevronDo
 import { getPortfolioDataForEditing, updatePortfolioSection } from '@/lib/dataManager';
 import AdminLoadError from '@/components/AdminLoadError';
 import AdminLayout from '@/components/AdminLayout';
-import { PageBanner } from '@/components/admin/kit';
+import { FieldError, PageBanner, TagsInput } from '@/components/admin/kit';
+import { useConfirm, useNotify } from '@/components/admin/Feedback';
+import { SingleFileEditor } from '@/components/admin/MediaEditors';
+import { useFileLedger } from '@/components/admin/useFileLedger';
+import { toWebUrl } from '@/lib/url';
+import type { MediaFile } from '@/lib/types';
 import { useDraftSync } from '@/lib/previewBus';
 
 const inputStyles = "w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 placeholder-gray-500 shadow-sm";
@@ -20,21 +25,46 @@ interface Experience {
   period: string;
   type: string;
   description: string[];
+  logo?: MediaFile;
+  website?: string;
+  summary?: string;
+  skills?: string[];
 }
 
 export default function ExperienceAdmin() {
+  return (
+    <AdminLayout>
+      <ExperienceContent />
+    </AdminLayout>
+  );
+}
+
+const blankForm = (): Partial<Experience> => ({
+  title: '',
+  company: '',
+  location: '',
+  period: '',
+  type: 'Full-time',
+  description: [''],
+  website: '',
+  summary: '',
+  skills: [],
+  logo: undefined,
+});
+
+const filesOf = (items: Experience[]) =>
+  items.flatMap((item) => (item.logo ? [item.logo.path] : []));
+
+function ExperienceContent() {
+  const notify = useNotify();
+  const confirm = useConfirm();
+  const ledger = useFileLedger();
+  const [websiteError, setWebsiteError] = useState('');
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState<Partial<Experience>>({
-    title: '',
-    company: '',
-    location: '',
-    period: '',
-    type: 'Full-time',
-    description: ['']
-  });
+  const [formData, setFormData] = useState<Partial<Experience>>(blankForm);
 
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -53,13 +83,25 @@ export default function ExperienceAdmin() {
   }, []);
 
   const handleSave = async () => {
+    const website = (formData.website ?? '').trim();
+    if (website && !toWebUrl(website)) {
+      setWebsiteError('This does not look like a web address, for example https://www.company.com.');
+      return;
+    }
+    setWebsiteError('');
     const updatedData = [...experiences];
+    const extras = {
+      website: website ? toWebUrl(website) : '',
+      summary: (formData.summary ?? '').trim(),
+      skills: formData.skills ?? [],
+    };
     
     if (editingId) {
       const index = updatedData.findIndex(exp => exp.id === editingId);
       if (index !== -1) {
         updatedData[index] = { 
           ...formData, 
+          ...extras,
           id: editingId,
           description: formData.description?.filter(d => d.trim()) || []
         } as Experience;
@@ -67,6 +109,7 @@ export default function ExperienceAdmin() {
     } else {
       const newExperience: Experience = {
         ...formData,
+        ...extras,
         id: Date.now(),
         description: formData.description?.filter(d => d.trim()) || []
       } as Experience;
@@ -80,21 +123,25 @@ export default function ExperienceAdmin() {
       console.log('✅ Experience updated successfully');
     } catch (error) {
       console.error('❌ Failed to update experience:', error);
-      alert('Failed to save changes. Please try again.');
+      notify.error('Your changes could not be saved. Nothing is lost: it is all still on this page. Please try again.');
       return;
     }
-    
+
+    // logos uploaded or removed while the form was open: delete the ones nothing uses any more
+    await ledger.afterSave(filesOf(updatedData));
+    notify.success('Saved.');
+
     // Reset form
     setEditingId(null);
     setShowAddForm(false);
-    setFormData({
-      title: '',
-      company: '',
-      location: '',
-      period: '',
-      type: 'Full-time',
-      description: ['']
-    });
+    setFormData(blankForm());
+  };
+
+  const closeForm = async () => {
+    await ledger.afterCancel(filesOf(experiences));
+    setWebsiteError('');
+    setShowAddForm(false);
+    setEditingId(null);
   };
 
   const handleEdit = (experience: Experience) => {
@@ -107,16 +154,27 @@ export default function ExperienceAdmin() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this experience?')) {
+    const ok = await confirm({
+      title: 'Delete this experience?',
+      message: 'It is removed from your site, and its logo is deleted from storage.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (ok) {
+      const removed = experiences.find((exp) => exp.id === id);
       const updatedExperiences = experiences.filter(exp => exp.id !== id);
       setExperiences(updatedExperiences);
       
       try {
         await updatePortfolioSection('experience', updatedExperiences);
         console.log('✅ Experience deleted successfully');
+        if (removed?.logo) {
+          ledger.touch(removed.logo.path);
+          await ledger.afterSave(filesOf(updatedExperiences));
+        }
       } catch (error) {
         console.error('❌ Failed to delete experience:', error);
-        alert('Failed to delete experience. Please try again.');
+        notify.error('The experience could not be deleted. Please try again.');
       }
     }
   };
@@ -144,7 +202,7 @@ export default function ExperienceAdmin() {
       console.log('✅ Experience order updated');
     } catch (err) {
       console.error('❌ Failed to update experience order', err);
-      alert('Failed to reorder experiences.');
+      notify.error('The order could not be saved. Please try again.');
     }
   };
 
@@ -163,25 +221,19 @@ export default function ExperienceAdmin() {
   };
 
   if (loadError) {
-    return (
-      <AdminLayout>
-        <AdminLoadError message={loadError} />
-      </AdminLayout>
-    );
+    return <AdminLoadError message={loadError} />;
   }
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="max-w-6xl mx-auto">
         <div className="space-y-6">
         {/* Header */}
@@ -195,14 +247,7 @@ export default function ExperienceAdmin() {
             onClick={() => {
               setShowAddForm(true);
               setEditingId(null);
-              setFormData({
-                title: '',
-                company: '',
-                location: '',
-                period: '',
-                type: 'Full-time',
-                description: ['']
-              });
+              setFormData(blankForm());
             }}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 text-white rounded-xl shadow-sm hover:from-purple-600 hover:to-purple-700 transition whitespace-nowrap shadow-sm"
           >
@@ -223,10 +268,7 @@ export default function ExperienceAdmin() {
                 {editingId ? 'Edit Experience' : 'Add New Experience'}
               </h3>
               <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  setEditingId(null);
-                }}
+                onClick={closeForm}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X size={20} />
@@ -293,9 +335,60 @@ export default function ExperienceAdmin() {
               </div>
             </div>
 
+            <div className="mt-6 grid md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="exp-website" className={labelStyles}>Company website</label>
+                <input
+                  id="exp-website"
+                  type="text"
+                  value={formData.website || ''}
+                  onChange={(e) => updateFormField('website', e.target.value)}
+                  aria-invalid={Boolean(websiteError)}
+                  className={inputStyles}
+                  placeholder="https://www.company.com"
+                />
+                <FieldError id="err-exp-website" message={websiteError} />
+                <p className="mt-1 text-xs text-gray-500">Shown as a “Visit website” link on the card.</p>
+              </div>
+              <div>
+                <TagsInput
+                  id="exp-skills"
+                  label="Skills and tools used"
+                  hint="Separate with commas. Shown as small tags under the role."
+                  value={formData.skills ?? []}
+                  onChange={(value) => updateFormField('skills', value)}
+                  placeholder="Python, SQL, Power BI"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label htmlFor="exp-summary" className={labelStyles}>Short summary</label>
+              <textarea
+                id="exp-summary"
+                rows={2}
+                maxLength={400}
+                value={formData.summary || ''}
+                onChange={(e) => updateFormField('summary', e.target.value)}
+                className={inputStyles}
+                placeholder="One or two sentences about the role. Shown above the points."
+              />
+            </div>
+
+            <div className="mt-6">
+              <SingleFileEditor
+                file={formData.logo}
+                onChange={(file) => updateFormField('logo', file)}
+                kind="logo"
+                ledger={ledger}
+                label="Company logo"
+                help="A square logo works best (JPG, PNG, WebP or GIF, up to 4 MB). Without one, the card shows the company's initials."
+              />
+            </div>
+
             {/* Description */}
             <div className="mt-6">
-              <label className={labelStyles}>Job Description</label>
+              <label className={labelStyles}>Key responsibilities (the first two show on the card, the rest under “View more”)</label>
               {formData.description?.map((desc, index) => (
                 <div key={index} className="flex gap-2 mb-2">
                   <input
@@ -325,10 +418,7 @@ export default function ExperienceAdmin() {
 
             <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
               <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  setEditingId(null);
-                }}
+                onClick={closeForm}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors font-medium"
               >
                 Cancel
@@ -369,6 +459,14 @@ export default function ExperienceAdmin() {
                 className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm hover:border-purple-200 hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between">
+                  {experience.logo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/media/${experience.logo.path}`}
+                      alt=""
+                      className="mr-4 h-14 w-14 shrink-0 rounded-xl border border-gray-200 bg-white object-contain p-1"
+                    />
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{experience.title}</h3>
@@ -428,6 +526,6 @@ export default function ExperienceAdmin() {
         </div>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }
